@@ -29,6 +29,7 @@ router.post("/saveMission", async function (req, res, next) {
     departure_journey: req.body.departure,
     arrival_journey: req.body.arrival,
     transport_capacity_total: req.body.weight,
+    date_journey: req.body.dateJourney,
   });
 
   await newMission.save();
