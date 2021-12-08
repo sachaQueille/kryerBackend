@@ -2,6 +2,7 @@ var express = require("express");
 var router = express.Router();
 var bcrypt = require("bcrypt");
 var uid2 = require("uid2");
+var uniqid = require('uniqid');
 
 //format date
 function formatDate(date) {
@@ -179,7 +180,7 @@ router.post("/signUp", async function (req, res, next) {
   res.json({ result, saveUser, error, token });
 });
 
-
+// route pour recuperer le user grace au token du storage lors du chargement de l'app
 router.get('/getUser',async function(req,res,next){
 
   var user = await userModel.find({token:req.query.token});
@@ -189,5 +190,42 @@ router.get('/getUser',async function(req,res,next){
   res.json({user})
 });
 
+// route pour save le colis dans bdd
+router.post('/saveDelivery',async function(req,res,next){
+
+    var result = false;
+    console.log(uniqid())
+
+    var newDelivery = new deliveryModel({
+      //expeditor_id:req.body.expeditorId,
+      url_image:"",
+      weigth:req.body.weight,
+      measures:{
+        heigth:req.body.heigth,
+        width:req.body.width,
+        length:req.body.length
+      },
+      coordinates_recipient:{
+        firstname:req.body.firstname,
+        lastName:req.body.lastname,
+        email:req.body.email,
+        phone:req.body.phone
+      },
+      delivery_status:"ask",
+      price:req.body.price,
+      isValidate:false,
+      verifCode:uniqid()
+
+    })
+
+    var deliverySave = await newDelivery.save();
+
+    if(deliverySave){
+      resutl=true;
+    }
+
+
+  res.json(result)
+})
 
 module.exports = router;
