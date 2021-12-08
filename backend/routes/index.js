@@ -1,13 +1,19 @@
 var express = require("express");
 var router = express.Router();
-var bcrypt = require('bcrypt');
-var uid2 = require('uid2');
-
+var bcrypt = require("bcrypt");
+var uid2 = require("uid2");
+var uniqid = require('uniqid');
 
 //format date
 function formatDate(date) {
-  return ('0' + date.getDate()).slice(-2) + '/' + ('0' + parseInt(date.getMonth() + 1)).slice(-2) + '/' + date.getFullYear();
-};
+  return (
+    ("0" + date.getDate()).slice(-2) +
+    "/" +
+    ("0" + parseInt(date.getMonth() + 1)).slice(-2) +
+    "/" +
+    date.getFullYear()
+  );
+}
 
 //import des modeles
 var userModel = require("../modules/users");
@@ -46,15 +52,19 @@ router.post("/saveMission", async function (req, res, next) {
   res.json({ result: true });
 });
 
-router.post('/searchKryer', async function (req, res, next) {
-
-  var missionList = await missionModel.find({ departure_journey: req.body.departure, arrival_journey: req.body.arrival });
+router.post("/searchKryer", async function (req, res, next) {
+  var missionList = await missionModel.find({
+    departure_journey: req.body.departure,
+    arrival_journey: req.body.arrival,
+  });
 
   //missionList = missionList.filter(e => e.date_journey >= req.body.date);
 
   //filtre sur le poid du colis
-  missionList = missionList.filter(e => e.transport_capacity_rest >= req.body.weight)
-  console.log(missionList);
+  missionList = missionList.filter(
+    (e) => e.transport_capacity_rest >= req.body.weight
+  );
+ 
 
   // je recupere seulement les informations qui m'interessent pour les envoyer dans le front
   kryerList = [];
@@ -68,23 +78,21 @@ router.post('/searchKryer', async function (req, res, next) {
       date_delivery: e.date_delivery,
       place_delivery: e.place_delivery,
       date_receipt: e.date_receipt,
-      place_receipt: e.place_receipt
-    })
+      place_receipt: e.place_receipt,
+    });
   });
 
-  console.log(kryerList)
-
-
+  console.log(kryerList);
 
   var result = false;
   if (kryerList) {
     result = kryerList;
   }
 
-  res.json(result)
+  res.json(result);
 });
 
-router.get('/getMission', async function (req, res, next) {
+router.get("/getMission", async function (req, res, next) {
   //var missions = await deliveryModel.findById("61ade704aa1d49805ebbd627");
   // var missions = await missionModel.findById("61af087ebf214b2ec1dcd9be");
   var missions = await missionModel.find();
@@ -95,70 +103,61 @@ router.get('/getMission', async function (req, res, next) {
     result = missions;
   }
   res.json(result);
-
 });
 
-router.post('/signIn', async function (req, res, next) {
-  var result = false
-  var user = null
-  var error = []
-  var token = null
+router.post("/signIn", async function (req, res, next) {
+  var result = false;
+  var user = null;
+  var error = [];
+  var token = null;
 
-  if (req.body.emailFromFront == ''
-    || req.body.passwordFromFront == ''
-  ) {
-    error.push('champs vides')
+  if (req.body.emailFromFront == "" || req.body.passwordFromFront == "") {
+    error.push("champs vides");
   }
 
   if (error.length == 0) {
     user = await userModel.findOne({
       email: req.body.emailFromFront,
-    })
+    });
 
     if (user) {
       if (bcrypt.compareSync(req.body.passwordFromFront, user.password)) {
-        result = true
-        token = user.token
+        result = true;
+        token = user.token;
       } else {
-        result = false
-        error.push('mot de passe incorrect')
+        result = false;
+        error.push("mot de passe incorrect");
       }
-
     } else {
-      error.push('email incorrect')
+      error.push("email incorrect");
     }
   }
-  res.json({ result, user, error, token })
-})
+  res.json({ result, user, error, token });
+});
 
-
-router.post('/signUp', async function(req,res,next){
-
-  var error = []
-  var result = false
-  var saveUser = null
-  var token = null
+router.post("/signUp", async function (req, res, next) {
+  var error = [];
+  var result = false;
+  var saveUser = null;
+  var token = null;
 
   const data = await userModel.findOne({
     email: req.body.emailFromFront,
-    
-  
-  })
+  });
 
-  if(data != null){
-    error.push('utilisateur déjà présent')
+  if (data != null) {
+    error.push("utilisateur déjà présent");
   }
 
-  if(req.body.usernameFromFront == ''
-  || req.body.emailFromFront == ''
-  || req.body.passwordFromFront == ''
-  ){
-    error.push('champs vides')
+  if (
+    req.body.usernameFromFront == "" ||
+    req.body.emailFromFront == "" ||
+    req.body.passwordFromFront == ""
+  ) {
+    error.push("champs vides");
   }
 
-
-  if(error.length == 0){
-
+  if (error.length == 0) {
     var hash = bcrypt.hashSync(req.body.passwordFromFront, 10);
     var newUser = new userModel({
       firstName: req.body.firstNameFromFront,
@@ -167,20 +166,67 @@ router.post('/signUp', async function(req,res,next){
       email: req.body.emailFromFront,
       password: hash,
       token: uid2(32),
-    })
-  
-    saveUser = await newUser.save()
-  
-    
-    if(saveUser){
-      result = true
-      token = saveUser.token
+    });
+
+    saveUser = await newUser.save();
+
+    if (saveUser) {
+      result = true;
+      token = saveUser.token;
     }
   }
-  
 
-  res.json({result, saveUser, error, token})
+
+
+  res.json({ result, saveUser, error, token });
+});
+
+// route pour recuperer le user grace au token du storage lors du chargement de l'app
+router.get('/getUser',async function(req,res,next){
+
+  var user = await userModel.find({token:req.query.token});
+
+  console.log('user',user)
+
+  res.json({user})
+});
+
+// route pour save le colis dans bdd
+router.post('/saveDelivery',async function(req,res,next){
+
+    var result = false;
+    console.log(uniqid())
+
+    var newDelivery = new deliveryModel({
+      //expeditor_id:req.body.expeditorId,
+      url_image:"",
+      weigth:req.body.weight,
+      measures:{
+        heigth:req.body.heigth,
+        width:req.body.width,
+        length:req.body.length
+      },
+      coordinates_recipient:{
+        firstname:req.body.firstname,
+        lastName:req.body.lastname,
+        email:req.body.email,
+        phone:req.body.phone
+      },
+      delivery_status:"ask",
+      price:req.body.price,
+      isValidate:false,
+      verifCode:uniqid()
+
+    })
+
+    var deliverySave = await newDelivery.save();
+
+    if(deliverySave){
+      resutl=true;
+    }
+
+
+  res.json(result)
 })
-
 
 module.exports = router;
