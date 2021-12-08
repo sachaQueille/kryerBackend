@@ -30,10 +30,7 @@ app.use(function(req, res, next) {
   next(createError(404));
 });
 
-//format date
-app.locals.dateFormat = function (date){
-  return ('0'+date.getDate()).slice(-2)+'/'+ ('0'+parseInt(date.getMonth()+1)).slice(-2)+'/'+date.getFullYear();
-};
+
 
 // error handler
 app.use(function(err, req, res, next) {
