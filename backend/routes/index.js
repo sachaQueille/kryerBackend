@@ -34,6 +34,7 @@ router.post("/saveMission", async function (req, res, next) {
     departure_journey: req.body.departure,
     arrival_journey: req.body.arrival,
     transport_capacity_total: req.body.weight,
+    transport_capacity_rest: req.body.weight,
     date_journey: req.body.dateJourney,
   });
 
@@ -44,13 +45,37 @@ router.post("/saveMission", async function (req, res, next) {
 
 router.post('/searchKryer', async function(req,res,next){
 
-  var missionList = await missionModel.find({departure_journey:req.body.departure,arrival_journey:req.body.arrival});
-  console.log(missionList);
+  var missionList = await missionModel.find({departure_journey:req.body.departure, arrival_journey:req.body.arrival});
+  
   //missionList = missionList.filter(e => e.date_journey >= req.body.date);
+
+  //filtre sur le poid du colis
+  missionList = missionList.filter(e=> e.transport_capacity_rest >= req.body.weight)
+  console.log(missionList);
+
+  // je recupere seulement les informations qui m'interessent pour les envoyer dans le front
+  kryerList = [];
+  missionList.map(function(e){
+    kryerList.push({
+      departure:e.departure_journey,
+      arrival:e.arrival_journey,
+      date:e.date_journey,
+      price: parseInt(e.pricePerKg) * parseInt(req.body.weight),
+      id:e.id,
+      date_delivery:e.date_delivery,
+      place_delivery:e.place_delivery,
+      date_receipt:e.date_receipt,
+      place_receipt:e.place_receipt
+    })
+  });
+
+  console.log(kryerList)
+
+  
   
   var result = false;
-  if(missionList){
-    result = missionList;
+  if(kryerList){
+    result = kryerList;
   }
 
   res.json(result)
