@@ -127,7 +127,7 @@ router.post('/signIn', async function (req, res, next) {
       error.push('email incorrect')
     }
   }
-  res.json({ result, user, error, token })
+  res.json({ result , user, error, token })
 })
 
 
@@ -161,7 +161,7 @@ router.post('/signUp', async function(req,res,next){
     var hash = bcrypt.hashSync(req.body.passwordFromFront, 10);
     var newUser = new userModel({
       firstName: req.body.firstNameFromFront,
-      lasttName: req.body.lastNameFromFront,
+      lastName: req.body.lastNameFromFront,
       phone : req.body.phoneFromFront,
       email: req.body.emailFromFront,
       password: hash,
@@ -179,6 +179,15 @@ router.post('/signUp', async function(req,res,next){
   
 
   res.json({result, saveUser, error, token})
+})
+
+router.get('/getUser',async function(req,res,next){
+
+  var user = await userModel.find({token:req.query.token});
+
+  console.log('user',user)
+
+  res.json({user})
 })
 
 
