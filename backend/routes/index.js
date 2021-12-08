@@ -161,7 +161,7 @@ router.post('/signUp', async function(req,res,next){
     var hash = bcrypt.hashSync(req.body.passwordFromFront, 10);
     var newUser = new userModel({
       firstName: req.body.firstNameFromFront,
-      lasttName: req.body.lastNameFromFront,
+      lastName: req.body.lastNameFromFront,
       phone : req.body.phoneFromFront,
       email: req.body.emailFromFront,
       password: hash,
