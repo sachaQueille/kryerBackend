@@ -86,7 +86,8 @@ router.post('/searchKryer', async function (req, res, next) {
 
 router.get('/getMission', async function (req, res, next) {
   //var missions = await deliveryModel.findById("61ade704aa1d49805ebbd627");
-  var missions = await missionModel.findById("61af087ebf214b2ec1dcd9be");
+  // var missions = await missionModel.findById("61af087ebf214b2ec1dcd9be");
+  var missions = await missionModel.find();
 
   console.log(missions);
   var result = false;
