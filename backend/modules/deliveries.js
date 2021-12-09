@@ -21,7 +21,7 @@ var deliverySchema = mongoose.Schema({
     coordinates_recipient:recipientSchema,
     delivery_status:String,
     price:Number,
-    isValidate:Boolean,
+    isValidate:String,
     verifCode:String 
 });
 
