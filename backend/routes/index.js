@@ -189,14 +189,13 @@ router.get("/getUser", async function (req, res, next) {
 // route pour save le colis dans bdd
 router.post("/saveDelivery", async function (req, res, next) {
   var result = false;
-  console.log(uniqid());
 
   var newDelivery = new deliveryModel({
     //expeditor_id:req.body.expeditorId,
     url_image: "",
     weigth: req.body.weight,
     measures: {
-      heigth: req.body.heigth,
+      heigth: req.body.height,
       width: req.body.width,
       length: req.body.length,
     },
@@ -208,13 +207,23 @@ router.post("/saveDelivery", async function (req, res, next) {
     },
     delivery_status: "ask",
     price: req.body.price,
-    isValidate: false,
+    isValidate: "notYet",
     verifCode: uniqid(),
   });
 
   var deliverySave = await newDelivery.save();
 
-  if (deliverySave) {
+  console.log(deliverySave);
+  console.log(req.body.idMission);
+
+  var mission = await missionModel.findById(req.body.idMission);
+  console.log(mission);
+
+  mission.delivery_id.push(deliverySave._id);
+
+  missionSave = await mission.save();
+
+  if (missionSave) {
     result = true;
   }
 
