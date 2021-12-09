@@ -14,14 +14,15 @@ var recipientSchema = mongoose.Schema({
 });
 
 var deliverySchema = mongoose.Schema({
-    expeditor_id:[{type: mongoose.Schema.Types.ObjectId, ref:'users'}],
+    expeditor_id:{type: mongoose.Schema.Types.ObjectId, ref:'users'},
     url_image:String,
     weigth:Number,
     measures:measureSchema,
     coordinates_recipient:recipientSchema,
     delivery_status:String,
     price:Number,
-    isValidate:String
+    isValidate:Boolean,
+    verifCode:String 
 });
 
 var deliveryModel = mongoose.model('deliveries', deliverySchema);
