@@ -28,7 +28,7 @@ router.get("/", async function (req, res, next) {
     .populate("expeditor_id")
     .exec();
 
-  console.log(user.expeditor_id);
+  // console.log(user.expeditor_id);
 
   res.render("index", { title: "Express" });
 });
@@ -64,7 +64,7 @@ router.post("/searchKryer", async function (req, res, next) {
   missionList = missionList.filter(
     (e) => e.transport_capacity_rest >= req.body.weight
   );
- 
+
 
   // je recupere seulement les informations qui m'interessent pour les envoyer dans le front
   kryerList = [];
@@ -96,13 +96,14 @@ router.get("/getMission", async function (req, res, next) {
   //var missions = await deliveryModel.findById("61ade704aa1d49805ebbd627");
   // var missions = await missionModel.findById("61af087ebf214b2ec1dcd9be");
   var missions = await missionModel.find();
+  
 
-  console.log(missions);
+  console.log("missions", missions);
   var result = false;
   if (missions) {
-    result = missions;
+    result = true;
   }
-  res.json(result);
+  res.json({result, missions});
 });
 
 router.post("/signIn", async function (req, res, next) {
@@ -162,7 +163,7 @@ router.post("/signUp", async function (req, res, next) {
     var newUser = new userModel({
       firstName: req.body.firstNameFromFront,
       lastName: req.body.lastNameFromFront,
-      phone : req.body.phoneFromFront,
+      phone: req.body.phoneFromFront,
       email: req.body.emailFromFront,
       password: hash,
       token: uid2(32),
@@ -182,51 +183,65 @@ router.post("/signUp", async function (req, res, next) {
 });
 
 // route pour recuperer le user grace au token du storage lors du chargement de l'app
-router.get('/getUser',async function(req,res,next){
+router.get('/getUser', async function (req, res, next) {
 
-  var user = await userModel.find({token:req.query.token});
+  var user = await userModel.find({ token: req.query.token });
 
-  console.log('user',user)
+  console.log('user', user)
 
-  res.json({user})
+  res.json({ user })
 });
 
 // route pour save le colis dans bdd
-router.post('/saveDelivery',async function(req,res,next){
+router.post('/saveDelivery', async function (req, res, next) {
 
-    var result = false;
-    console.log(uniqid())
+  var result = false;
+  console.log(uniqid())
 
-    var newDelivery = new deliveryModel({
-      //expeditor_id:req.body.expeditorId,
-      url_image:"",
-      weigth:req.body.weight,
-      measures:{
-        heigth:req.body.heigth,
-        width:req.body.width,
-        length:req.body.length
-      },
-      coordinates_recipient:{
-        firstname:req.body.firstname,
-        lastName:req.body.lastname,
-        email:req.body.email,
-        phone:req.body.phone
-      },
-      delivery_status:"ask",
-      price:req.body.price,
-      isValidate:false,
-      verifCode:uniqid()
+  var newDelivery = new deliveryModel({
+    //expeditor_id:req.body.expeditorId,
+    url_image: "",
+    weigth: req.body.weight,
+    measures: {
+      heigth: req.body.heigth,
+      width: req.body.width,
+      length: req.body.length
+    },
+    coordinates_recipient: {
+      firstname: req.body.firstname,
+      lastName: req.body.lastname,
+      email: req.body.email,
+      phone: req.body.phone
+    },
+    delivery_status: "ask",
+    price: req.body.price,
+    isValidate: false,
+    verifCode: uniqid()
+  })
 
-    })
+  var deliverySave = await newDelivery.save();
 
-    var deliverySave = await newDelivery.save();
-
-    if(deliverySave){
-      resutl=true;
-    }
+  if (deliverySave) {
+    resutl = true;
+  }
 
 
   res.json(result)
 })
+
+
+
+//route de test temporaire par Chaythy
+router.get('/searchExpeditor', async function (req, res, next) {
+
+  var delivery = await deliveryModel.findById(req.query.iddelivery);
+
+  console.log(delivery);
+  var result = false;
+  if (delivery) {
+    result = delivery;
+  }
+  res.json(delivery);
+});
 
 module.exports = router;
