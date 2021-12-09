@@ -2,7 +2,7 @@ var express = require("express");
 var router = express.Router();
 var bcrypt = require("bcrypt");
 var uid2 = require("uid2");
-var uniqid = require('uniqid');
+var uniqid = require("uniqid");
 
 //format date
 function formatDate(date) {
@@ -64,7 +64,6 @@ router.post("/searchKryer", async function (req, res, next) {
   missionList = missionList.filter(
     (e) => e.transport_capacity_rest >= req.body.weight
   );
- 
 
   // je recupere seulement les informations qui m'interessent pour les envoyer dans le front
   kryerList = [];
@@ -161,7 +160,7 @@ router.post("/signUp", async function (req, res, next) {
     var newUser = new userModel({
       firstName: req.body.firstNameFromFront,
       lastName: req.body.lastNameFromFront,
-      phone : req.body.phoneFromFront,
+      phone: req.body.phoneFromFront,
       email: req.body.emailFromFront,
       password: hash,
       token: uid2(32),
@@ -175,57 +174,64 @@ router.post("/signUp", async function (req, res, next) {
     }
   }
 
-
-
   res.json({ result, saveUser, error, token });
 });
 
 // route pour recuperer le user grace au token du storage lors du chargement de l'app
-router.get('/getUser',async function(req,res,next){
+router.get("/getUser", async function (req, res, next) {
+  var user = await userModel.find({ token: req.query.token });
 
-  var user = await userModel.find({token:req.query.token});
+  console.log("user", user);
 
-  console.log('user',user)
-
-  res.json({user})
+  res.json({ user });
 });
 
 // route pour save le colis dans bdd
-router.post('/saveDelivery',async function(req,res,next){
+router.post("/saveDelivery", async function (req, res, next) {
+  var result = false;
+  console.log(uniqid());
 
-    var result = false;
-    console.log(uniqid())
+  var newDelivery = new deliveryModel({
+    //expeditor_id:req.body.expeditorId,
+    url_image: "",
+    weigth: req.body.weight,
+    measures: {
+      heigth: req.body.heigth,
+      width: req.body.width,
+      length: req.body.length,
+    },
+    coordinates_recipient: {
+      firstname: req.body.firstname,
+      lastName: req.body.lastname,
+      email: req.body.email,
+      phone: req.body.phone,
+    },
+    delivery_status: "ask",
+    price: req.body.price,
+    isValidate: false,
+    verifCode: uniqid(),
+  });
 
-    var newDelivery = new deliveryModel({
-      //expeditor_id:req.body.expeditorId,
-      url_image:"",
-      weigth:req.body.weight,
-      measures:{
-        heigth:req.body.heigth,
-        width:req.body.width,
-        length:req.body.length
-      },
-      coordinates_recipient:{
-        firstname:req.body.firstname,
-        lastName:req.body.lastname,
-        email:req.body.email,
-        phone:req.body.phone
-      },
-      delivery_status:"ask",
-      price:req.body.price,
-      isValidate:false,
-      verifCode:uniqid()
+  var deliverySave = await newDelivery.save();
 
-    })
+  if (deliverySave) {
+    result = true;
+  }
 
-    var deliverySave = await newDelivery.save();
+  res.json(result);
+});
 
-    if(deliverySave){
-      resutl=true;
-    }
+router.post("/updateInfos", async function (req, res, next) {
+  let userExist = await userModel.findOne({ token: req.body.token });
 
-
-  res.json(result)
-})
+  if (userExist) {
+    userExist.avatar = req.body.avatar;
+    userExist = await userExist.save();
+    console.log(userExist);
+    res.json(userExist);
+  } else {
+    res.status(500).send("user not found");
+  }
+});
 
 module.exports = router;
