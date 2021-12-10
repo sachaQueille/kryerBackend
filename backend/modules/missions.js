@@ -12,7 +12,9 @@ var missionSchema = mongoose.Schema({
   departure_journey: String,
   arrival_journey: String,
   date_journey: String,
-  mission_status: String,
+  newMissionStatus: Boolean,
+  currentMissionStatus: Boolean,
+  finishMissionStatus: Boolean,
   avatarKryer:String,
   firstNameKryer:String,
   lastNameKryer:String
