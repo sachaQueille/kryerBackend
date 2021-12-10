@@ -12,7 +12,7 @@ var missionSchema = mongoose.Schema({
   departure_journey: String,
   arrival_journey: String,
   date_journey: String,
-  sattus_mission: String,
+  mission_status: String,
 });
 
 var missionModel = mongoose.model("missions", missionSchema);
