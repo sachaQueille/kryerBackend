@@ -44,6 +44,9 @@ router.post("/saveMission", async function (req, res, next) {
     transport_capacity_rest: req.body.weight,
     date_journey: req.body.dateJourney,
     mission_status: "newMission",
+    avatarKryer: req.body.avatarKryer,
+    firstNameKryer: req.body.firstNameKryer,
+    lastNameKryer: req.body.lastNameKryer,
   });
 
   var missionSave = await newMission.save();
