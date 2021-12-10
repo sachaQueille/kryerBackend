@@ -13,6 +13,9 @@ var missionSchema = mongoose.Schema({
   arrival_journey: String,
   date_journey: String,
   mission_status: String,
+  avatarKryer:String,
+  firstNameKryer:String,
+  lastNameKryer:String
 });
 
 var missionModel = mongoose.model("missions", missionSchema);
