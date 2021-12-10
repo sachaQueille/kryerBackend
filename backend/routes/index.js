@@ -28,7 +28,6 @@ router.get("/", async function (req, res, next) {
     .populate("expeditor_id")
     .exec();
 
-  // console.log(user.expeditor_id);
 
   res.render("index", { title: "Express" });
 });
@@ -45,9 +44,16 @@ router.post("/saveMission", async function (req, res, next) {
     transport_capacity_total: req.body.weight,
     transport_capacity_rest: req.body.weight,
     date_journey: req.body.dateJourney,
+    mission_status: "newMission"
   });
 
-  await newMission.save();
+  var missionSave = await newMission.save();
+
+  var user = await userModel.findById(req.body.idKryer);
+  console.log(user);
+  user.missions.push(missionSave._id)
+
+  await user.save();
 
   res.json({ result: true });
 });
@@ -81,7 +87,6 @@ router.post("/searchKryer", async function (req, res, next) {
     });
   });
 
-  console.log(kryerList);
 
   var result = false;
   if (kryerList) {
@@ -92,10 +97,8 @@ router.post("/searchKryer", async function (req, res, next) {
 });
 
 router.get("/getMission", async function (req, res, next) {
-  //var missions = await deliveryModel.findById("61ade704aa1d49805ebbd627");
-  // var missions = await missionModel.findById("61af087ebf214b2ec1dcd9be");
+
   var missions = await missionModel.find();
-  
 
   console.log("missions", missions);
   var result = false;
@@ -185,42 +188,48 @@ router.get("/getUser", async function (req, res, next) {
 
   console.log("user", user);
 
-  res.json({ user });
+  res.json({user})
+});
+
+router.get('/getUserById',async function(req,res,next){
+
+  var user = await userModel.findById(req.query.id);
+
+  res.json({user})
 });
 
 // route pour save le colis dans bdd
-router.post("/saveDelivery", async function (req, res, next) {
-  var result = false;
+router.post('/saveDelivery',async function(req,res,next){
 
-  var newDelivery = new deliveryModel({
-    //expeditor_id:req.body.expeditorId,
-    url_image: "",
-    weigth: req.body.weight,
-    measures: {
-      heigth: req.body.height,
-      width: req.body.width,
-      length: req.body.length,
-    },
-    coordinates_recipient: {
-      firstname: req.body.firstname,
-      lastName: req.body.lastname,
-      email: req.body.email,
-      phone: req.body.phone,
-    },
-    delivery_status: "ask",
-    price: req.body.price,
-    isValidate: "notYet",
-    verifCode: uniqid(),
-  });
+    var result = false;
+     
+    var newDelivery = new deliveryModel({
+      expeditor_id:req.body.expeditorId,
+      url_image:"",
+      weigth:req.body.weight,
+      measures:{
+        heigth:req.body.height,
+        width:req.body.width,
+        length:req.body.length
+      },
+      coordinates_recipient:{
+        firstname:req.body.firstname,
+        lastName:req.body.lastname,
+        email:req.body.email,
+        phone:req.body.phone
+      },
+      delivery_status:"ask",
+      price:req.body.price,
+      isValidate:"notYet",
+      verifCode:uniqid()
+    })
+
+
 
   var deliverySave = await newDelivery.save();
 
-  console.log(deliverySave);
-  console.log(req.body.idMission);
-
   var mission = await missionModel.findById(req.body.idMission);
-  console.log(mission);
-
+   
   mission.delivery_id.push(deliverySave._id);
 
   missionSave = await mission.save();
@@ -246,18 +255,47 @@ router.post("/updateInfos", async function (req, res, next) {
 });
 
 
+router.post("/loadMissions",async function(req,res,next){
 
-//route de test temporaire par Chaythy
-router.get('/searchExpeditor', async function (req, res, next) {
-
-  var delivery = await deliveryModel.findById(req.query.iddelivery);
-
-  console.log(delivery);
   var result = false;
-  if (delivery) {
-    result = delivery;
+
+  var kryer = await userModel.findById(req.body.idKryer).populate("missions").exec();
+  var missions = kryer.missions;
+  missions = missions.filter(e=>e.mission_status == req.body.status);
+
+  if(missions){
+    result=missions;
   }
-  res.json(delivery);
+
+  res.json(missions);
+});
+
+
+router.post("/loadDeliveries",async function(req,res,next){
+
+  var result = false;
+
+  var mission = await missionModel.findById(req.body.idMission).populate("delivery_id").exec();
+ 
+  var deliveries = mission.delivery_id;
+
+  
+
+  if(req.body.status == "newMission"){
+    deliveries = deliveries.filter(e=>e.delivery_status == "ask");
+  }else if (req.body.status == "currentMission"){
+    deliveries = deliveries.filter(e=>e.delivery_status == "accepted");
+  }else if (req.body.status == "finishMission"){
+    deliveries = deliveries.filter(e=>e.delivery_status == "terminate");
+  }
+
+console.log(deliveries)
+
+  if(deliveries){
+    result=deliveries;
+  }
+
+  res.json(result);
 });
 
 module.exports = router;
