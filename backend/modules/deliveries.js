@@ -7,7 +7,7 @@ var measureSchema = mongoose.Schema({
 });
 
 var recipientSchema = mongoose.Schema({
-    firstname:String,
+    firstName:String,
     lastName:String,
     email:String,
     phone:String

@@ -44,7 +44,10 @@ router.post("/saveMission", async function (req, res, next) {
     transport_capacity_total: req.body.weight,
     transport_capacity_rest: req.body.weight,
     date_journey: req.body.dateJourney,
-    mission_status: "newMission"
+    mission_status: "newMission",
+    avatarKryer:req.body.avatarKryer,
+    firstNameKryer:req.body.firstNameKryer,
+    lastNameKryer:req.body.lastNameKryer
   });
 
   var missionSave = await newMission.save();
@@ -212,7 +215,7 @@ router.post('/saveDelivery',async function(req,res,next){
         length:req.body.length
       },
       coordinates_recipient:{
-        firstname:req.body.firstname,
+        firstName:req.body.firstname,
         lastName:req.body.lastname,
         email:req.body.email,
         phone:req.body.phone
