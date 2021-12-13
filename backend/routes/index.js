@@ -5,7 +5,7 @@ var uid2 = require("uid2");
 var uniqid = require("uniqid");
 
 //format date
-function formatDate(date) {
+function formatDate(date){
   return (
     ("0" + date.getDate()).slice(-2) +
     "/" +
@@ -108,7 +108,6 @@ router.post("/searchKryer", async function (req, res, next) {
 });
 
 router.get("/getMission", async function (req, res, next) {
-
   var missions = await missionModel.find();
 
   console.log("missions", missions);
@@ -323,6 +322,38 @@ console.log(deliveries)
   res.json(result);
 });
 
+router.post('/loadMyDeliveries',async function(req,res,next){
+  var deliveries = await deliveryModel.find({expeditor_id:req.body.userId});
+
+  var dbDeliveries = [];
+  for(var i=0;i<deliveries.length;i++){
+    var missions = await missionModel.find({delivery_id:deliveries[i]._id});
+    if(missions.length !== 0){
+      for(var j=0;j<missions.length;j++){
+        dbDeliveries.push(
+          {_id:deliveries[i]._id,
+            weight:deliveries[i].weigth,
+            price:deliveries[i].price,
+            status_delivery:deliveries[i].isValidate,
+            verifCode:deliveries[i].verifCode,
+            departure_journey:missions[j].departure_journey,
+            arrival_journey:missions[j].arrival_journey,
+            date_receipt:missions[j].date_receipt
+          }
+        )        
+      } 
+    }       
+  }
+
+  console.log("mydata",dbDeliveries);
+
+  var result = false;
+  if(deliveries){
+    result = true;
+
+  }
+  res.json({result,deliveries:dbDeliveries})
+});
 
 router.post('/changeStatusMission',async function(req,res,next){
 
