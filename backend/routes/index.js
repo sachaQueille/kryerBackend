@@ -355,6 +355,7 @@ router.post("/changeStatusMission", async function (req, res, next) {
     mission.transport_capacity_rest -= req.body.weigth;
   } else {
     res.json({ err: "vous n'avez pas suffisament de place" });
+    return;
   }
 
   if (mission.transport_capacity_rest == 0) {
@@ -383,7 +384,7 @@ router.post("/addMessageAccept", async function (req, res, next) {
 
   let messageSave = await newMessage.save();
   console.log(messageSave);
-  res.json(messageSave);
+  res.json({result: true});
 });
 
 module.exports = router;
