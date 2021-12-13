@@ -43,7 +43,9 @@ router.post("/saveMission", async function (req, res, next) {
     transport_capacity_total: req.body.weight,
     transport_capacity_rest: req.body.weight,
     date_journey: req.body.dateJourney,
-    mission_status: "newMission",
+    newMissionStatus: true,
+    currentMissionStatus: false,
+    finishMissionStatus: false,
     avatarKryer: req.body.avatarKryer,
     firstNameKryer: req.body.firstNameKryer,
     lastNameKryer: req.body.lastNameKryer,
@@ -76,6 +78,7 @@ router.post("/searchKryer", async function (req, res, next) {
   // je recupere seulement les informations qui m'interessent pour les envoyer dans le front
   kryerList = [];
   missionList.map(function (e) {
+    console.log(e);
     kryerList.push({
       departure: e.departure_journey,
       arrival: e.arrival_journey,
@@ -86,6 +89,11 @@ router.post("/searchKryer", async function (req, res, next) {
       place_delivery: e.place_delivery,
       date_receipt: e.date_receipt,
       place_receipt: e.place_receipt,
+      infoKryer: {
+        avatar: e.avatarKryer,
+        firstName: e.firstNameKryer,
+        lastName: e.lastNameKryer,
+      },
     });
   });
 
@@ -216,6 +224,11 @@ router.post("/saveDelivery", async function (req, res, next) {
       email: req.body.email,
       phone: req.body.phone,
     },
+    infoExpeditor: {
+      firstName: req.body.firstNameExp,
+      lastName: req.body.lastNameExp,
+      avatar: req.body.avatarExp,
+    },
     delivery_status: "ask",
     price: req.body.price,
     isValidate: "notYet",
@@ -258,7 +271,14 @@ router.post("/loadMissions", async function (req, res, next) {
     .populate("missions")
     .exec();
   var missions = kryer.missions;
-  missions = missions.filter((e) => e.mission_status == req.body.status);
+
+  if (req.body.status == "newMission") {
+    missions = missions.filter((e) => e.newMissionStatus == true);
+  } else if (req.body.status == "currentMission") {
+    missions = missions.filter((e) => e.currentMissionStatus == true);
+  } else if (req.body.status == "finishMission") {
+    missions = missions.filter((e) => e.finishMissionStatus == true);
+  }
 
   if (missions) {
     result = missions;
@@ -280,7 +300,7 @@ router.post("/loadDeliveries", async function (req, res, next) {
   if (req.body.status == "newMission") {
     deliveries = deliveries.filter((e) => e.delivery_status == "ask");
   } else if (req.body.status == "currentMission") {
-    deliveries = deliveries.filter((e) => e.delivery_status == "accepted");
+    deliveries = deliveries.filter((e) => e.delivery_status == "accept");
   } else if (req.body.status == "finishMission") {
     deliveries = deliveries.filter((e) => e.delivery_status == "terminate");
   }
@@ -292,6 +312,33 @@ router.post("/loadDeliveries", async function (req, res, next) {
   }
 
   res.json(result);
+});
+
+router.post("/changeStatusMission", async function (req, res, next) {
+  console.log(req.body.weigth);
+
+  var mission = await missionModel.findById(req.body.idMission);
+
+  mission.currentMissionStatus = true;
+  if (mission.transport_capacity_rest >= req.body.weigth) {
+    mission.transport_capacity_rest -= req.body.weigth;
+  } else {
+    res.json({ err: "vous n'avez pas suffisament de place" });
+  }
+
+  if (mission.transport_capacity_rest == 0) {
+    mission.newMissionStatus = false;
+  }
+
+  missionSave = mission.save();
+
+  var delivery = await deliveryModel.findById(req.body.idDelivery);
+
+  delivery.delivery_status = "accept";
+
+  var deliverySave = delivery.save();
+
+  res.json(missionSave ? true : false);
 });
 
 module.exports = router;
