@@ -300,4 +300,36 @@ console.log(deliveries)
   res.json(result);
 });
 
+router.post('/loadMyDeliveries',async function(req,res,next){
+  var deliveries = await deliveryModel.find({expeditor_id:req.body.userId});
+
+  var dbDeliveries = [];
+  for(var i=0;i<deliveries.length;i++){
+    var missions = await missionModel.find({delivery_id:deliveries[i]._id});
+    if(missions.length !== 0){
+      for(var j=0;j<missions.length;j++){
+        dbDeliveries.push(
+          {_id:deliveries[i]._id,
+            weight:deliveries[i].weigth,
+            price:deliveries[i].price,
+            status_delivery:deliveries[i].isValidate,
+            verifCode:deliveries[i].verifCode,
+            departure_journey:missions[j].departure_journey,
+            arrival_journey:missions[j].arrival_journey,
+            date_receipt:missions[j].date_receipt
+          }
+        )        
+      } 
+    }       
+  }
+
+  console.log("mydata",dbDeliveries);
+
+  var result = false;
+  if(deliveries){
+    result = true;
+
+  }
+  res.json({result,deliveries:dbDeliveries})
+});
 module.exports = router;
