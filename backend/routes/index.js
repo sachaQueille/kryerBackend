@@ -341,4 +341,18 @@ router.post("/changeStatusMission", async function (req, res, next) {
   res.json(missionSave ? true : false);
 });
 
+router.post("/addMessageAccept", async function (req, res, next) {
+  let newMessage = new messageModel({
+    expeditor_id: req.body.expeditor,
+    recipient_id: req.body.recipient,
+    message:
+      "Bonjour, je viens d'accepter votre demande, nous pouvons échanger ici pour les détails",
+    date: req.body.date,
+  });
+
+  let messageSave = await newMessage.save();
+  console.log(messageSave);
+  res.json(messageSave);
+});
+
 module.exports = router;
