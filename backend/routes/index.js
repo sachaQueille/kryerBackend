@@ -108,12 +108,12 @@ router.post("/searchKryer", async function (req, res, next) {
 router.get("/getMission", async function (req, res, next) {
   var missions = await missionModel.find();
 
-  console.log(missions);
+  console.log("missions", missions);
   var result = false;
   if (missions) {
-    result = missions;
+    result = true;
   }
-  res.json(result);
+  res.json({result, missions});
 });
 
 router.post("/signIn", async function (req, res, next) {
@@ -355,6 +355,7 @@ router.post("/changeStatusMission", async function (req, res, next) {
     mission.transport_capacity_rest -= req.body.weigth;
   } else {
     res.json({ err: "vous n'avez pas suffisament de place" });
+    return;
   }
 
   if (mission.transport_capacity_rest == 0) {
@@ -383,7 +384,7 @@ router.post("/addMessageAccept", async function (req, res, next) {
 
   let messageSave = await newMessage.save();
   console.log(messageSave);
-  res.json(messageSave);
+  res.json({result: true});
 });
 
 module.exports = router;
