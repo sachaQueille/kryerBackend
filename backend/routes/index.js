@@ -76,6 +76,10 @@ router.post("/searchKryer", async function (req, res, next) {
     (e) => e.transport_capacity_rest >= req.body.weight
   );
 
+  missionList = missionList.filter(e => e.newMissionStatus == true);
+
+  missionList = missionList.filter(e => e.newMissionStatus == true);
+
   // je recupere seulement les informations qui m'interessent pour les envoyer dans le front
   kryerList = [];
   missionList.map(function (e) {
@@ -234,7 +238,7 @@ router.post('/saveDelivery',async function(req,res,next){
         lastName:req.body.lastNameExp,
         avatar:req.body.avatarExp
       },
-      delivery_status:"ask",
+      delivery_status:"supportedDelivery",
       price:req.body.price,
       isValidate:"notYet",
       verifCode:uniqid()
@@ -263,7 +267,6 @@ router.post("/updateInfos", async function (req, res, next) {
   if (userExist) {
     userExist.avatar = req.body.avatar;
     userExist = await userExist.save();
-    console.log(userExist);
     res.json(userExist);
   } else {
     res.status(500).send("user not found");
@@ -307,14 +310,13 @@ router.post("/loadDeliveries",async function(req,res,next){
   
 
   if(req.body.status == "newMission"){
-    deliveries = deliveries.filter(e=>e.delivery_status == "ask");
+    deliveries = deliveries.filter(e=>e.isValidate == "notYet");
   }else if (req.body.status == "currentMission"){
-    deliveries = deliveries.filter(e=>e.delivery_status == "accept");
+    deliveries = deliveries.filter(e=>e.isValidate == "accept" && e.delivery_status != "delivered");
   }else if (req.body.status == "finishMission"){
-    deliveries = deliveries.filter(e=>e.delivery_status == "terminate");
+    deliveries = deliveries.filter(e=>e.delivery_status == "delivered");
   }
 
-console.log(deliveries)
 
   if(deliveries){
     result=deliveries;
@@ -324,36 +326,91 @@ console.log(deliveries)
 });
 
 
-router.post('/changeStatusMission',async function(req,res,next){
+router.post('/changeStatusValidate',async function(req,res,next){
 
   
-  console.log(req.body.weigth);
 
   var mission = await missionModel.findById(req.body.idMission)
 
-  mission.currentMissionStatus = true;
+ 
+
   if(mission.transport_capacity_rest >= req.body.weigth){
-     mission.transport_capacity_rest -= req.body.weigth;
+    mission.transport_capacity_rest -= req.body.weigth;
+ 
+         
+        
   }else{
-    res.json({err:"vous n'avez pas suffisament de place"})
+    res.json({err:true})
   };
 
   if(mission.transport_capacity_rest == 0){
     mission.newMissionStatus = false;
   };
 
-  missionSave = mission.save();
+
+
+  var missionSave = await mission.save();
 
   var delivery = await deliveryModel.findById(req.body.idDelivery);
 
-  delivery.delivery_status = "accept";
 
-  var deliverySave = delivery.save();
+  if(delivery.isValidate == "notYet"){
+    mission.currentMissionStatus = true;
+    delivery.isValidate = "accept";
+  } else if (delivery.isValidate== "accept"){
+    mission.finishMissionStatus = true;
+    delivery.delivery_status = "delivered";
+  }
+ 
+
+  var missionSave = await mission.save();
+  await delivery.save();
+
+
+  var deliveries = await missionModel.findById(req.body.idMission).populate('delivery_id').exec();
+ 
+  console.log(deliveries.delivery_id.filter(e=>e.delivery_status == "delivered").length );
+  console.log(deliveries.delivery_id.filter(e=>e.isValidate == "accept").length)
+
+
+  if (deliveries.delivery_id.filter(e=>e.delivery_status == "delivered").length == deliveries.delivery_id.filter(e=>e.isValidate == "accept").length){
+    mission.currentMissionStatus = false;
+    mission.newMissionStatus = false;
+    missionSave = await mission.save();
+  }
+
+ 
 
 
 
 
   res.json(missionSave ? true : false)
+});
+
+router.post("/changeStatusCancel", async function(req,res,next){
+  var result = false;
+  var delivery = await deliveryModel.findById(req.body.idDelivery);
+  
+  delivery.isValidate = "cancel";
+
+  var deliverySave = await delivery.save();
+
+  console.log(deliverySave)
+  console.log(req.body.weigth)
+  if(deliverySave.isValidate == "cancel"){
+    var mission = await missionModel.findById(req.body.idMission);
+
+    console.log(mission);
+    mission.transport_capacity_rest += parseInt(req.body.weigth);
+    await mission.save();
+  }
+  
+
+  if(deliverySave){
+    result = true;
+  }
+
+  res.json(result)
 })
 
 module.exports = router;
