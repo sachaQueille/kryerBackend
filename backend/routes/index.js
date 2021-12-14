@@ -364,9 +364,6 @@ router.post('/changeStatusValidate',async function(req,res,next){
 
   var mission = await missionModel.findById(req.body.idMission);
 
-
-
-
   
   if (mission.transport_capacity_rest == 0) {
     mission.newMissionStatus = false;
@@ -457,6 +454,47 @@ router.post("/changeStatusCancel", async function(req,res,next){
   res.json(result)
 });
 
+
+
+router.post("/loadLastMessage", async function (req, res, next) {
+
+  var userId = await userModel.findOne({ token: req.body.token });
+
+  /* get distinct destinataires*/
+  var distinctDest = await messageModel.find({expeditor_id:userId._id}).distinct("recipient_id");
+ 
+  var messages = new Array(distinctDest.length);
+  for(var i=0; i<distinctDest.length; i++){
+    var msgExp = await messageModel.find({$and:[{expeditor_id:userId._id},{recipient_id:distinctDest[i]}]});
+    var destInfos = await userModel.find({_id:distinctDest[i]});
+
+      messages[i] = 
+        {id_dest: destInfos[0]._id,
+         firstName_dest:destInfos[0].firstName,
+         lastName_dest:destInfos[0].lastName,
+         msg: msgExp[msgExp.length-1].message.slice(0,40) + "...",
+         avatarUrl: destInfos[0].avatar,
+         timeStamp: "12:47 PM"
+        }
+      }
+  var result = false;
+  if (messages) {
+    result = true;
+  }
+  res.json({result, messages});
+});
+
+
+router.post("/loadMessages", async function (req, res, next) {
+  var userId = await userModel.findOne({ token: req.body.token });
+  var messages = await messageModel.find({$and:[{expeditor_id:userId._id},{recipient_id:req.body.idRecipient}]});
+  var result = false;
+  if (messages) {
+    result = true;
+  }
+  console.log("Mes messages",messages);
+  res.json({result, messages});
+});
 
 
 module.exports = router;
