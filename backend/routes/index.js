@@ -5,7 +5,7 @@ var uid2 = require("uid2");
 var uniqid = require("uniqid");
 
 //format date
-function formatDate(date){
+function formatDate(date) {
   return (
     ("0" + date.getDate()).slice(-2) +
     "/" +
@@ -28,7 +28,6 @@ router.get("/", async function (req, res, next) {
     .populate("expeditor_id")
     .exec();
 
-
   res.render("index", { title: "Express" });
 });
 
@@ -47,16 +46,16 @@ router.post("/saveMission", async function (req, res, next) {
     newMissionStatus: true,
     currentMissionStatus: false,
     finishMissionStatus: false,
-    avatarKryer:req.body.avatarKryer,
-    firstNameKryer:req.body.firstNameKryer,
-    lastNameKryer:req.body.lastNameKryer
+    avatarKryer: req.body.avatarKryer,
+    firstNameKryer: req.body.firstNameKryer,
+    lastNameKryer: req.body.lastNameKryer,
   });
 
   var missionSave = await newMission.save();
 
   var user = await userModel.findById(req.body.idKryer);
   console.log(user);
-  user.missions.push(missionSave._id)
+  user.missions.push(missionSave._id);
 
   await user.save();
 
@@ -79,7 +78,7 @@ router.post("/searchKryer", async function (req, res, next) {
   // je recupere seulement les informations qui m'interessent pour les envoyer dans le front
   kryerList = [];
   missionList.map(function (e) {
-    console.log(e)
+    console.log(e);
     kryerList.push({
       departure: e.departure_journey,
       arrival: e.arrival_journey,
@@ -90,14 +89,13 @@ router.post("/searchKryer", async function (req, res, next) {
       place_delivery: e.place_delivery,
       date_receipt: e.date_receipt,
       place_receipt: e.place_receipt,
-      infoKryer:{
-        avatar:e.avatarKryer,
-        firstName:e.firstNameKryer,
-        lastName:e.lastNameKryer
-      }
+      infoKryer: {
+        avatar: e.avatarKryer,
+        firstName: e.firstNameKryer,
+        lastName: e.lastNameKryer,
+      },
     });
   });
-
 
   var result = false;
   if (kryerList) {
@@ -110,7 +108,7 @@ router.post("/searchKryer", async function (req, res, next) {
 router.get("/getMission", async function (req, res, next) {
   var missions = await missionModel.find();
 
-  console.log(missions);
+  //console.log(missions);
   var result = false;
   if (missions) {
     result = missions;
@@ -196,55 +194,51 @@ router.post("/signUp", async function (req, res, next) {
 router.get("/getUser", async function (req, res, next) {
   var user = await userModel.find({ token: req.query.token });
 
-  console.log("user", user);
+  //console.log("user", user);
 
-  res.json({user})
+  res.json({ user });
 });
 
-router.get('/getUserById',async function(req,res,next){
-
+router.get("/getUserById", async function (req, res, next) {
   var user = await userModel.findById(req.query.id);
 
-  res.json({user})
+  res.json({ user });
 });
 
 // route pour save le colis dans bdd
-router.post('/saveDelivery',async function(req,res,next){
+router.post("/saveDelivery", async function (req, res, next) {
+  var result = false;
 
-    var result = false;
-     
-    var newDelivery = new deliveryModel({
-      expeditor_id:req.body.expeditorId,
-      url_image:"",
-      weigth:req.body.weight,
-      measures:{
-        heigth:req.body.height,
-        width:req.body.width,
-        length:req.body.length
-      },
-      coordinates_recipient:{
-        firstName:req.body.firstname,
-        lastName:req.body.lastname,
-        email:req.body.email,
-        phone:req.body.phone
-      },
-      infoExpeditor:{
-        firstName:req.body.firstNameExp,
-        lastName:req.body.lastNameExp,
-        avatar:req.body.avatarExp
-      },
-      delivery_status:"ask",
-      price:req.body.price,
-      isValidate:"notYet",
-      verifCode:uniqid()
-    })
-
-
+  var newDelivery = new deliveryModel({
+    expeditor_id: req.body.expeditorId,
+    url_image: "",
+    weigth: req.body.weight,
+    measures: {
+      heigth: req.body.height,
+      width: req.body.width,
+      length: req.body.length,
+    },
+    coordinates_recipient: {
+      firstName: req.body.firstname,
+      lastName: req.body.lastname,
+      email: req.body.email,
+      phone: req.body.phone,
+    },
+    infoExpeditor: {
+      firstName: req.body.firstNameExp,
+      lastName: req.body.lastNameExp,
+      avatar: req.body.avatarExp,
+    },
+    delivery_status: "ask",
+    price: req.body.price,
+    isValidate: "notYet",
+    verifCode: uniqid(),
+  });
 
   var deliverySave = await newDelivery.save();
 
   var mission = await missionModel.findById(req.body.idMission);
-   
+
   mission.delivery_id.push(deliverySave._id);
 
   missionSave = await mission.save();
@@ -269,110 +263,103 @@ router.post("/updateInfos", async function (req, res, next) {
   }
 });
 
-
-router.post("/loadMissions",async function(req,res,next){
-
+router.post("/loadMissions", async function (req, res, next) {
   var result = false;
 
-  var kryer = await userModel.findById(req.body.idKryer).populate("missions").exec();
+  var kryer = await userModel
+    .findById(req.body.idKryer)
+    .populate("missions")
+    .exec();
   var missions = kryer.missions;
-  
 
-  if(req.body.status == "newMission"){
-    missions = missions.filter(e=>e.newMissionStatus == true);
-  }else if (req.body.status == "currentMission"){
-    missions = missions.filter(e=>e.currentMissionStatus == true);
-  }else if (req.body.status == "finishMission"){
-    missions = missions.filter(e=>e.finishMissionStatus == true);
+  if (req.body.status == "newMission") {
+    missions = missions.filter((e) => e.newMissionStatus == true);
+  } else if (req.body.status == "currentMission") {
+    missions = missions.filter((e) => e.currentMissionStatus == true);
+  } else if (req.body.status == "finishMission") {
+    missions = missions.filter((e) => e.finishMissionStatus == true);
   }
 
-
-  if(missions){
-    result=missions;
+  if (missions) {
+    result = missions;
   }
 
   res.json(missions);
 });
 
-
-router.post("/loadDeliveries",async function(req,res,next){
-
+router.post("/loadDeliveries", async function (req, res, next) {
   var result = false;
 
-  var mission = await missionModel.findById(req.body.idMission).populate("delivery_id").exec();
- 
+  var mission = await missionModel
+    .findById(req.body.idMission)
+    .populate("delivery_id")
+    .exec();
+
   var deliveries = mission.delivery_id;
 
-  
-
-  if(req.body.status == "newMission"){
-    deliveries = deliveries.filter(e=>e.delivery_status == "ask");
-  }else if (req.body.status == "currentMission"){
-    deliveries = deliveries.filter(e=>e.delivery_status == "accept");
-  }else if (req.body.status == "finishMission"){
-    deliveries = deliveries.filter(e=>e.delivery_status == "terminate");
+  if (req.body.status == "newMission") {
+    deliveries = deliveries.filter((e) => e.delivery_status == "ask");
+  } else if (req.body.status == "currentMission") {
+    deliveries = deliveries.filter((e) => e.delivery_status == "accept");
+  } else if (req.body.status == "finishMission") {
+    deliveries = deliveries.filter((e) => e.delivery_status == "terminate");
   }
 
-console.log(deliveries)
+  //console.log(deliveries);
 
-  if(deliveries){
-    result=deliveries;
+  if (deliveries) {
+    result = deliveries;
   }
 
   res.json(result);
 });
 
-router.post('/loadMyDeliveries',async function(req,res,next){
-  var deliveries = await deliveryModel.find({expeditor_id:req.body.userId});
+router.post("/loadMyDeliveries", async function (req, res, next) {
+  var deliveries = await deliveryModel.find({ expeditor_id: req.body.userId });
 
   var dbDeliveries = [];
-  for(var i=0;i<deliveries.length;i++){
-    var missions = await missionModel.find({delivery_id:deliveries[i]._id});
-    if(missions.length !== 0){
-      for(var j=0;j<missions.length;j++){
-        dbDeliveries.push(
-          {_id:deliveries[i]._id,
-            weight:deliveries[i].weigth,
-            price:deliveries[i].price,
-            status_mission:deliveries[i].isValidate,
-            delivery_status:deliveries[i].delivery_status,
-            verifCode:deliveries[i].verifCode,
-            departure_journey:missions[j].departure_journey,
-            arrival_journey:missions[j].arrival_journey,
-            date_receipt:missions[j].date_receipt
-          }
-        )        
-      } 
-    }       
+  for (var i = 0; i < deliveries.length; i++) {
+    var missions = await missionModel.find({ delivery_id: deliveries[i]._id });
+    if (missions.length !== 0) {
+      for (var j = 0; j < missions.length; j++) {
+        dbDeliveries.push({
+          _id: deliveries[i]._id,
+          weight: deliveries[i].weigth,
+          price: deliveries[i].price,
+          status_delivery: deliveries[i].isValidate,
+          verifCode: deliveries[i].verifCode,
+          departure_journey: missions[j].departure_journey,
+          arrival_journey: missions[j].arrival_journey,
+          date_receipt: missions[j].date_receipt,
+        });
+      }
+    }
   }
 
-  console.log("mydata",dbDeliveries);
+  //console.log("mydata", dbDeliveries);
 
   var result = false;
-  if(deliveries){
+  if (deliveries) {
     result = true;
-
   }
-  res.json({result,deliveries:dbDeliveries})
+  res.json({ result, deliveries: dbDeliveries });
 });
 
-router.post('/changeStatusMission',async function(req,res,next){
+router.post("/changeStatusMission", async function (req, res, next) {
+  //console.log(req.body.weigth);
 
-  
-  console.log(req.body.weigth);
-
-  var mission = await missionModel.findById(req.body.idMission)
+  var mission = await missionModel.findById(req.body.idMission);
 
   mission.currentMissionStatus = true;
-  if(mission.transport_capacity_rest >= req.body.weigth){
-     mission.transport_capacity_rest -= req.body.weigth;
-  }else{
-    res.json({err:"vous n'avez pas suffisament de place"})
-  };
+  if (mission.transport_capacity_rest >= req.body.weigth) {
+    mission.transport_capacity_rest -= req.body.weigth;
+  } else {
+    res.json({ err: "vous n'avez pas suffisament de place" });
+  }
 
-  if(mission.transport_capacity_rest == 0){
+  if (mission.transport_capacity_rest == 0) {
     mission.newMissionStatus = false;
-  };
+  }
 
   missionSave = mission.save();
 
@@ -382,10 +369,61 @@ router.post('/changeStatusMission',async function(req,res,next){
 
   var deliverySave = delivery.save();
 
+  res.json(missionSave ? true : false);
+});
+
+router.post("/addMessageAccept", async function (req, res, next) {
+  let newMessage = new messageModel({
+    expeditor_id: req.body.expeditor,
+    recipient_id: req.body.recipient,
+    message:
+      "Bonjour, je viens d'accepter votre demande, nous pouvons échanger ici pour les détails",
+    date: req.body.date,
+  });
+
+  let messageSave = await newMessage.save();
+  //console.log(messageSave);
+  res.json(messageSave);
+});
+
+router.post("/loadLastMessage", async function (req, res, next) {
+
+  var userId = await userModel.findOne({ token: req.body.token });
+
+  /* get distinct destinataires*/
+  var distinctDest = await messageModel.find({expeditor_id:userId._id}).distinct("recipient_id");
+ 
+  var messages = new Array(distinctDest.length);
+  for(var i=0; i<distinctDest.length; i++){
+    var msgExp = await messageModel.find({$and:[{expeditor_id:userId._id},{recipient_id:distinctDest[i]}]});
+    var destInfos = await userModel.find({_id:distinctDest[i]});
+
+      messages[i] = 
+        {id_dest: destInfos[0]._id,
+         firstName_dest:destInfos[0].firstName,
+         lastName_dest:destInfos[0].lastName,
+         msg: msgExp[msgExp.length-1].message.slice(0,40) + "...",
+         avatarUrl: destInfos[0].avatar,
+         timeStamp: "12:47 PM"
+        }
+      }
+  var result = false;
+  if (messages) {
+    result = true;
+  }
+  res.json({result, messages});
+});
 
 
-
-  res.json(missionSave ? true : false)
-})
+router.post("/loadMessages", async function (req, res, next) {
+  var userId = await userModel.findOne({ token: req.body.token });
+  var messages = await messageModel.find({$and:[{expeditor_id:userId._id},{recipient_id:req.body.idRecipient}]});
+  var result = false;
+  if (messages) {
+    result = true;
+  }
+  console.log("Mes messages",messages);
+  res.json({result, messages});
+});
 
 module.exports = router;
