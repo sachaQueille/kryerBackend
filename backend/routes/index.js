@@ -54,7 +54,6 @@ router.post("/saveMission", async function (req, res, next) {
   var missionSave = await newMission.save();
 
   var user = await userModel.findById(req.body.idKryer);
-  console.log(user);
   user.missions.push(missionSave._id);
 
   await user.save();
@@ -82,7 +81,6 @@ router.post("/searchKryer", async function (req, res, next) {
   // je recupere seulement les informations qui m'interessent pour les envoyer dans le front
   kryerList = [];
   missionList.map(function (e) {
-    console.log(e);
     kryerList.push({
       departure: e.departure_journey,
       arrival: e.arrival_journey,
@@ -112,7 +110,6 @@ router.post("/searchKryer", async function (req, res, next) {
 router.get("/getMission", async function (req, res, next) {
   var missions = await missionModel.find();
 
-  console.log("missions", missions);
   var result = false;
   if (missions) {
     result = true;
@@ -198,7 +195,7 @@ router.post("/signUp", async function (req, res, next) {
 router.get("/getUser", async function (req, res, next) {
   var user = await userModel.find({ token: req.query.token });
 
-  console.log("user", user);
+  //console.log("user", user);
 
   res.json({ user });
 });
@@ -210,7 +207,6 @@ router.get("/getUserById", async function (req, res, next) {
 });
 
 // route pour save le colis dans bdd
-<<<<<<< HEAD
 router.post('/saveDelivery',async function(req,res,next){
 
     var result = false;
@@ -241,36 +237,7 @@ router.post('/saveDelivery',async function(req,res,next){
       verifCode:uniqid()
     })
 
-=======
-router.post("/saveDelivery", async function (req, res, next) {
-  var result = false;
->>>>>>> da5418fa93acf67e547f752ef18a7a225f734f9b
 
-  var newDelivery = new deliveryModel({
-    expeditor_id: req.body.expeditorId,
-    url_image: "",
-    weigth: req.body.weight,
-    measures: {
-      heigth: req.body.height,
-      width: req.body.width,
-      length: req.body.length,
-    },
-    coordinates_recipient: {
-      firstName: req.body.firstname,
-      lastName: req.body.lastname,
-      email: req.body.email,
-      phone: req.body.phone,
-    },
-    infoExpeditor: {
-      firstName: req.body.firstNameExp,
-      lastName: req.body.lastNameExp,
-      avatar: req.body.avatarExp,
-    },
-    delivery_status: "ask",
-    price: req.body.price,
-    isValidate: "notYet",
-    verifCode: uniqid(),
-  });
 
   var deliverySave = await newDelivery.save();
 
@@ -333,7 +300,6 @@ router.post("/loadDeliveries", async function (req, res, next) {
 
   var deliveries = mission.delivery_id;
 
-<<<<<<< HEAD
   if(req.body.status == "newMission"){
     deliveries = deliveries.filter(e=>e.isValidate == "notYet");
   }else if (req.body.status == "currentMission"){
@@ -342,23 +308,22 @@ router.post("/loadDeliveries", async function (req, res, next) {
     deliveries = deliveries.filter(e=>e.delivery_status == "delivered");
   }
 
-=======
-  if (req.body.status == "newMission") {
-    deliveries = deliveries.filter((e) => e.delivery_status == "ask");
-  } else if (req.body.status == "currentMission") {
-    deliveries = deliveries.filter((e) => e.delivery_status == "accept");
-  } else if (req.body.status == "finishMission") {
-    deliveries = deliveries.filter((e) => e.delivery_status == "terminate");
-  }
+ console.log(mission.transport_capacity_rest)
+ console.log(mission.transport_capacity_total)
 
-  console.log(deliveries);
->>>>>>> da5418fa93acf67e547f752ef18a7a225f734f9b
+  var etatCapacity = 100 - (mission.transport_capacity_rest * 100 / mission.transport_capacity_total);
+
+  console.log(etatCapacity);
+
+  var totalCagnotte = 0;
+  deliveries.map(e => totalCagnotte += e.price);
+ 
 
   if (deliveries) {
     result = deliveries;
   }
 
-  res.json(result);
+  res.json({result, etatCapacity, cagnotte: totalCagnotte});
 });
 
 router.post("/loadMyDeliveries", async function (req, res, next) {
@@ -383,11 +348,7 @@ router.post("/loadMyDeliveries", async function (req, res, next) {
     }
   }
 
-<<<<<<< HEAD
-router.post('/changeStatusValidate',async function(req,res,next){
-
   
-=======
   console.log("mydata", dbDeliveries);
 
   var result = false;
@@ -397,62 +358,54 @@ router.post('/changeStatusValidate',async function(req,res,next){
   res.json({ result, deliveries: dbDeliveries });
 });
 
-router.post("/changeStatusMission", async function (req, res, next) {
-  console.log(req.body.weigth);
->>>>>>> da5418fa93acf67e547f752ef18a7a225f734f9b
+router.post('/changeStatusValidate',async function(req,res,next){
+
+
 
   var mission = await missionModel.findById(req.body.idMission);
 
-<<<<<<< HEAD
- 
 
-  if(mission.transport_capacity_rest >= req.body.weigth){
-    mission.transport_capacity_rest -= req.body.weigth;
- 
-         
-        
-  }else{
-    res.json({err:true})
-  };
-=======
-  mission.currentMissionStatus = true;
-  if (mission.transport_capacity_rest >= req.body.weigth) {
-    mission.transport_capacity_rest -= req.body.weigth;
-  } else {
-    res.json({ err: "vous n'avez pas suffisament de place" });
-    return;
-  }
->>>>>>> da5418fa93acf67e547f752ef18a7a225f734f9b
 
+
+  
   if (mission.transport_capacity_rest == 0) {
     mission.newMissionStatus = false;
   }
 
-
-
-  var missionSave = await mission.save();
-
   var delivery = await deliveryModel.findById(req.body.idDelivery);
 
+  
 
   if(delivery.isValidate == "notYet"){
     mission.currentMissionStatus = true;
     delivery.isValidate = "accept";
+    if(mission.transport_capacity_rest >= req.body.weigth){
+      mission.transport_capacity_rest -= parseInt(req.body.weigth);
+     
+          
+    }else{
+      
+      res.json({err:true});
+      return;
+      
+    };
+
   } else if (delivery.isValidate== "accept"){
     mission.finishMissionStatus = true;
     delivery.delivery_status = "delivered";
   }
  
 
+
+
   var missionSave = await mission.save();
+
+  console .log(missionSave);
   await delivery.save();
 
 
   var deliveries = await missionModel.findById(req.body.idMission).populate('delivery_id').exec();
  
-  console.log(deliveries.delivery_id.filter(e=>e.delivery_status == "delivered").length );
-  console.log(deliveries.delivery_id.filter(e=>e.isValidate == "accept").length)
-
 
   if (deliveries.delivery_id.filter(e=>e.delivery_status == "delivered").length == deliveries.delivery_id.filter(e=>e.isValidate == "accept").length){
     mission.currentMissionStatus = false;
@@ -474,10 +427,12 @@ router.post("/addMessageAccept", async function (req, res, next) {
     date: req.body.date,
   });
 
-<<<<<<< HEAD
 
-  res.json(missionSave ? true : false)
+  let messageSave = await newMessage.save();
+  console.log(messageSave);
+  res.json({result: true});
 });
+
 
 router.post("/changeStatusCancel", async function(req,res,next){
   var result = false;
@@ -487,12 +442,9 @@ router.post("/changeStatusCancel", async function(req,res,next){
 
   var deliverySave = await delivery.save();
 
-  console.log(deliverySave)
-  console.log(req.body.weigth)
   if(deliverySave.isValidate == "cancel"){
     var mission = await missionModel.findById(req.body.idMission);
 
-    console.log(mission);
     mission.transport_capacity_rest += parseInt(req.body.weigth);
     await mission.save();
   }
@@ -503,12 +455,8 @@ router.post("/changeStatusCancel", async function(req,res,next){
   }
 
   res.json(result)
-})
-=======
-  let messageSave = await newMessage.save();
-  console.log(messageSave);
-  res.json({result: true});
 });
->>>>>>> da5418fa93acf67e547f752ef18a7a225f734f9b
+
+
 
 module.exports = router;
