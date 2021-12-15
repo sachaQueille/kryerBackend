@@ -341,7 +341,7 @@ router.post("/loadDeliveries", async function (req, res, next) {
 
 router.post("/loadMyDeliveries", async function (req, res, next) {
   var deliveries = await deliveryModel.find({ expeditor_id: req.body.userId });
-
+  console.log(deliveries);
   var dbDeliveries = [];
   for (var i = 0; i < deliveries.length; i++) {
     var missions = await missionModel.find({ delivery_id: deliveries[i]._id });
@@ -351,7 +351,8 @@ router.post("/loadMyDeliveries", async function (req, res, next) {
           _id: deliveries[i]._id,
           weight: deliveries[i].weigth,
           price: deliveries[i].price,
-          status_delivery: deliveries[i].delivery_status,
+          delivery_status:deliveries[i].delivery_status,
+          validateStatus: deliveries[i].isValidate,
           verifCode: deliveries[i].verifCode,
           departure_journey: missions[j].departure_journey,
           arrival_journey: missions[j].arrival_journey,
@@ -505,7 +506,6 @@ router.post("/loadMessages", async function (req, res, next) {
   if (messages) {
     result = true;
   }
-  console.log("Mes messages",messages);
   res.json({result, messages});
 });
 
@@ -541,7 +541,25 @@ router.post('/uploadPhoto', async function(req, res, next) {
   } else {
     res.json({result: false, message: resultCopy} );
   }
-  
+})
+
+
+router.post("/sendMessage", async function (req, res, next) {
+  let newMessage = new messageModel({
+    expeditor_id: req.body.expeditor,
+    recipient_id: req.body.recipient,
+    message:req.body.message,
+    date: req.body.date,
+  });
+
+  let messageSave = await newMessage.save();
+  console.log(messageSave);
+  var result="false";
+  if (messageSave){
+    result=true;
+  }
+  //console.log(newMessage);
+  res.json({result,newMessage});
 });
 
 module.exports = router;
