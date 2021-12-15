@@ -3,6 +3,19 @@ var router = express.Router();
 var bcrypt = require("bcrypt");
 var uid2 = require("uid2");
 var uniqid = require("uniqid");
+var request = require('sync-request');
+var fs = require('fs')
+
+
+var cloudinary = require('cloudinary').v2;
+
+
+cloudinary.config({
+ cloud_name: 'dcjze5qvx',
+ api_key: '354945478671377',
+ api_secret: 'Qx13Gn87zsegWOrV2PeJcWPSYew' 
+});
+
 
 //format date
 function formatDate(date) {
@@ -213,7 +226,7 @@ router.post('/saveDelivery',async function(req,res,next){
      
     var newDelivery = new deliveryModel({
       expeditor_id:req.body.expeditorId,
-      url_image:"",
+      url_image:req.body.urlDelivery,
       weigth:req.body.weight,
       measures:{
         heigth:req.body.height,
@@ -338,7 +351,7 @@ router.post("/loadMyDeliveries", async function (req, res, next) {
           _id: deliveries[i]._id,
           weight: deliveries[i].weigth,
           price: deliveries[i].price,
-          status_delivery: deliveries[i].isValidate,
+          status_delivery: deliveries[i].delivery_status,
           verifCode: deliveries[i].verifCode,
           departure_journey: missions[j].departure_journey,
           arrival_journey: missions[j].arrival_journey,
@@ -496,5 +509,39 @@ router.post("/loadMessages", async function (req, res, next) {
   res.json({result, messages});
 });
 
+router.post('/changeStatusTransit',async function(req,res,next){
+
+  var result = false
+  var delivery = await deliveryModel.findById(req.body.idDelivery);
+  delivery.delivery_status = "inTransitDelivery";
+  var deliverySave = delivery.save();
+
+ 
+
+  if(deliverySave){
+    result=true;
+  }
+
+  res.json(result)
+});
+
+
+
+router.post('/uploadPhoto', async function(req, res, next) {
+  var imagePath = './tmp/'+uniqid()+'.jpg';
+  var copyPhoto = await req.files.photo.mv(imagePath);
+ 
+  var resultCloudinary = await cloudinary.uploader.upload(imagePath);
+  
+
+  fs.unlinkSync(imagePath);
+
+  if(!copyPhoto) {
+    res.json({result: true, message: 'File uploaded!',resultCloudinary} );      
+  } else {
+    res.json({result: false, message: resultCopy} );
+  }
+  
+});
 
 module.exports = router;

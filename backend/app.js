@@ -10,8 +10,10 @@ var usersRouter = require('./routes/users');
 //connection BDD
 var connectionBDD = require('./modules/coonectionBDD');
 
+var fileUpload = require('express-fileupload');
 var app = express();
 
+app.use(fileUpload());
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
