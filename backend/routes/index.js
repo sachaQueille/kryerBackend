@@ -479,7 +479,10 @@ router.post("/loadLastMessage", async function (req, res, next) {
  
   var messages = new Array(distinctDest.length);
   for(var i=0; i<distinctDest.length; i++){
-    var msgExp = await messageModel.find({$and:[{expeditor_id:userId._id},{recipient_id:distinctDest[i]}]});
+    var msgExp = await messageModel.find({$or:[
+      {$and:[{expeditor_id:userId._id},{recipient_id:distinctDest[i]}]},
+      {$and:[{expeditor_id:distinctDest[i]},{recipient_id:userId._id}]}
+    ]});
     var destInfos = await userModel.find({_id:distinctDest[i]});
 
       messages[i] = 
@@ -501,7 +504,12 @@ router.post("/loadLastMessage", async function (req, res, next) {
 
 router.post("/loadMessages", async function (req, res, next) {
   var userId = await userModel.findOne({ token: req.body.token });
-  var messages = await messageModel.find({$and:[{expeditor_id:userId._id},{recipient_id:req.body.idRecipient}]});
+  
+  var messages = await messageModel.find({$or:[
+    {$and:[{expeditor_id:userId._id},{recipient_id:req.body.idRecipient}]},
+    {$and:[{expeditor_id:req.body.idRecipient},{recipient_id:userId._id}]}
+  ]});
+
   var result = false;
   if (messages) {
     result = true;
