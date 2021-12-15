@@ -504,7 +504,7 @@ router.post("/loadLastMessage", async function (req, res, next) {
 
 router.post("/loadMessages", async function (req, res, next) {
   var userId = await userModel.findOne({ token: req.body.token });
-  
+
   var messages = await messageModel.find({$or:[
     {$and:[{expeditor_id:userId._id},{recipient_id:req.body.idRecipient}]},
     {$and:[{expeditor_id:req.body.idRecipient},{recipient_id:userId._id}]}
@@ -568,6 +568,15 @@ router.post("/sendMessage", async function (req, res, next) {
   }
   //console.log(newMessage);
   res.json({result,newMessage});
+});
+
+router.delete('/deleteMyDelivery/:verifcode', async function(req, res, next) {
+  var returnDb = await deliveryModel.deleteOne({ verifCode: req.params.verifcode});
+  var result = false
+  if(returnDb){
+    result = true
+  }
+  res.json({result})
 });
 
 module.exports = router;
