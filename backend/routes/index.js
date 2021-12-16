@@ -600,15 +600,4 @@ router.delete("/deleteMyDelivery/:verifcode", async function (req, res, next) {
   res.json({ result });
 });
 
-router.delete("/deleteMyDelivery/:verifcode", async function (req, res, next) {
-  var returnDb = await deliveryModel.deleteOne({
-    verifCode: req.params.verifcode,
-  });
-  var result = false;
-  if (returnDb) {
-    result = true;
-  }
-  res.json({ result });
-});
-
 module.exports = router;
