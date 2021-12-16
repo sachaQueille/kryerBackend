@@ -308,10 +308,9 @@ router.post("/loadDeliveries", async function (req, res, next) {
     .exec();
 
   var deliveries = mission.delivery_id;
-  
+
   if (req.body.status == "newMission") {
     deliveries = deliveries.filter((e) => e.isValidate == "notYet");
-   
   } else if (req.body.status == "currentMission") {
     deliveries = deliveries.filter(
       (e) => e.isValidate == "accept" && e.delivery_status != "delivered"
@@ -320,6 +319,8 @@ router.post("/loadDeliveries", async function (req, res, next) {
     deliveries = deliveries.filter((e) => e.delivery_status == "delivered");
   }
 
+  console.log(mission.transport_capacity_rest);
+  console.log(mission.transport_capacity_total);
 
   var etatCapacity =
     100 -
@@ -334,7 +335,7 @@ router.post("/loadDeliveries", async function (req, res, next) {
     result = deliveries;
   }
 
-  res.json({ result, etatCapacity, cagnotte: totalCagnotte});
+  res.json({ result, etatCapacity, cagnotte: totalCagnotte });
 });
 
 router.post("/loadMyDeliveries", async function (req, res, next) {
@@ -453,7 +454,7 @@ router.post("/changeStatusCancel", async function (req, res, next) {
 
 router.post("/loadLastMessage", async function (req, res, next) {
   var userId = await userModel.findOne({ token: req.body.token });
-  
+
   /* get distinct destinataires*/
   var distinctDest1 = await messageModel
     .find({ recipient_id: userId._id })
@@ -503,13 +504,13 @@ router.post("/loadLastMessage", async function (req, res, next) {
     
     
     messages[i] = {
-      id_msg: msgExp[msgExp.length-1]._id,
+      id_msg: msgExp[msgExp.length - 1]._id,
       id_dest: destInfos[0]._id,
       firstName_dest: destInfos[0].firstName,
       lastName_dest: destInfos[0].lastName,
-      msg: msgExp[msgExp.length-1].message.slice(0, 40) + "...",
+      msg: msgExp[msgExp.length - 1].message.slice(0, 40) + "...",
       avatarUrl: destInfos[0].avatar,
-      timeStamp: msgExp[msgExp.length-1].date,
+      timeStamp: msgExp[msgExp.length - 1].date,
     };
   }
   //console.log(messages);
@@ -523,10 +524,22 @@ router.post("/loadLastMessage", async function (req, res, next) {
 router.post("/loadMessages", async function (req, res, next) {
   var userId = await userModel.findOne({ token: req.body.token });
 
-  var messages = await messageModel.find({$or:[
-    {$and:[{expeditor_id:userId._id},{recipient_id:req.body.idRecipient}]},
-    {$and:[{expeditor_id:req.body.idRecipient},{recipient_id:userId._id}]}
-  ]});
+  var messages = await messageModel.find({
+    $or: [
+      {
+        $and: [
+          { expeditor_id: userId._id },
+          { recipient_id: req.body.idRecipient },
+        ],
+      },
+      {
+        $and: [
+          { expeditor_id: req.body.idRecipient },
+          { recipient_id: userId._id },
+        ],
+      },
+    ],
+  });
 
   var result = false;
   if (messages) {
@@ -581,14 +594,5 @@ router.post("/sendMessage", async function (req, res, next) {
   res.json({ result, newMessage });
 });
 
-
-router.delete('/deleteMyDelivery/:verifcode', async function(req, res, next) {
-  var returnDb = await deliveryModel.deleteOne({ verifCode: req.params.verifcode});
-  var result = false
-  if(returnDb){
-    result = true
-  }
-  res.json({result})
-});
 
 module.exports = router;
