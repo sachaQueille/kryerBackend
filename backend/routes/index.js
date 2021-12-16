@@ -3,19 +3,16 @@ var router = express.Router();
 var bcrypt = require("bcrypt");
 var uid2 = require("uid2");
 var uniqid = require("uniqid");
-var request = require('sync-request');
-var fs = require('fs')
+var request = require("sync-request");
+var fs = require("fs");
 
-
-var cloudinary = require('cloudinary').v2;
-
+var cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
- cloud_name: 'dcjze5qvx',
- api_key: '354945478671377',
- api_secret: 'Qx13Gn87zsegWOrV2PeJcWPSYew' 
+  cloud_name: "dcjze5qvx",
+  api_key: "354945478671377",
+  api_secret: "Qx13Gn87zsegWOrV2PeJcWPSYew",
 });
-
 
 //format date
 function formatDate(date) {
@@ -87,9 +84,9 @@ router.post("/searchKryer", async function (req, res, next) {
     (e) => e.transport_capacity_rest >= req.body.weight
   );
 
-  missionList = missionList.filter(e => e.newMissionStatus == true);
+  missionList = missionList.filter((e) => e.newMissionStatus == true);
 
-  missionList = missionList.filter(e => e.newMissionStatus == true);
+  missionList = missionList.filter((e) => e.newMissionStatus == true);
 
   // je recupere seulement les informations qui m'interessent pour les envoyer dans le front
   kryerList = [];
@@ -127,7 +124,7 @@ router.get("/getMission", async function (req, res, next) {
   if (missions) {
     result = true;
   }
-  res.json({result, missions});
+  res.json({ result, missions });
 });
 
 router.post("/signIn", async function (req, res, next) {
@@ -220,37 +217,34 @@ router.get("/getUserById", async function (req, res, next) {
 });
 
 // route pour save le colis dans bdd
-router.post('/saveDelivery',async function(req,res,next){
+router.post("/saveDelivery", async function (req, res, next) {
+  var result = false;
 
-    var result = false;
-     
-    var newDelivery = new deliveryModel({
-      expeditor_id:req.body.expeditorId,
-      url_image:req.body.urlDelivery,
-      weigth:req.body.weight,
-      measures:{
-        heigth:req.body.height,
-        width:req.body.width,
-        length:req.body.length
-      },
-      coordinates_recipient:{
-        firstName:req.body.firstname,
-        lastName:req.body.lastname,
-        email:req.body.email,
-        phone:req.body.phone
-      },
-      infoExpeditor:{
-        firstName:req.body.firstNameExp,
-        lastName:req.body.lastNameExp,
-        avatar:req.body.avatarExp
-      },
-      delivery_status:"supportedDelivery",
-      price:req.body.price,
-      isValidate:"notYet",
-      verifCode:uniqid()
-    })
-
-
+  var newDelivery = new deliveryModel({
+    expeditor_id: req.body.expeditorId,
+    url_image: req.body.urlDelivery,
+    weigth: req.body.weight,
+    measures: {
+      heigth: req.body.height,
+      width: req.body.width,
+      length: req.body.length,
+    },
+    coordinates_recipient: {
+      firstName: req.body.firstname,
+      lastName: req.body.lastname,
+      email: req.body.email,
+      phone: req.body.phone,
+    },
+    infoExpeditor: {
+      firstName: req.body.firstNameExp,
+      lastName: req.body.lastNameExp,
+      avatar: req.body.avatarExp,
+    },
+    delivery_status: "supportedDelivery",
+    price: req.body.price,
+    isValidate: "notYet",
+    verifCode: uniqid(),
+  });
 
   var deliverySave = await newDelivery.save();
 
@@ -313,30 +307,33 @@ router.post("/loadDeliveries", async function (req, res, next) {
 
   var deliveries = mission.delivery_id;
 
-  if(req.body.status == "newMission"){
-    deliveries = deliveries.filter(e=>e.isValidate == "notYet");
-  }else if (req.body.status == "currentMission"){
-    deliveries = deliveries.filter(e=>e.isValidate == "accept" && e.delivery_status != "delivered");
-  }else if (req.body.status == "finishMission"){
-    deliveries = deliveries.filter(e=>e.delivery_status == "delivered");
+  if (req.body.status == "newMission") {
+    deliveries = deliveries.filter((e) => e.isValidate == "notYet");
+  } else if (req.body.status == "currentMission") {
+    deliveries = deliveries.filter(
+      (e) => e.isValidate == "accept" && e.delivery_status != "delivered"
+    );
+  } else if (req.body.status == "finishMission") {
+    deliveries = deliveries.filter((e) => e.delivery_status == "delivered");
   }
 
- console.log(mission.transport_capacity_rest)
- console.log(mission.transport_capacity_total)
+  console.log(mission.transport_capacity_rest);
+  console.log(mission.transport_capacity_total);
 
-  var etatCapacity = 100 - (mission.transport_capacity_rest * 100 / mission.transport_capacity_total);
+  var etatCapacity =
+    100 -
+    (mission.transport_capacity_rest * 100) / mission.transport_capacity_total;
 
   console.log(etatCapacity);
 
   var totalCagnotte = 0;
-  deliveries.map(e => totalCagnotte += e.price);
- 
+  deliveries.map((e) => (totalCagnotte += e.price));
 
   if (deliveries) {
     result = deliveries;
   }
 
-  res.json({result, etatCapacity, cagnotte: totalCagnotte});
+  res.json({ result, etatCapacity, cagnotte: totalCagnotte });
 });
 
 router.post("/loadMyDeliveries", async function (req, res, next) {
@@ -351,7 +348,7 @@ router.post("/loadMyDeliveries", async function (req, res, next) {
           _id: deliveries[i]._id,
           weight: deliveries[i].weigth,
           price: deliveries[i].price,
-          delivery_status:deliveries[i].delivery_status,
+          delivery_status: deliveries[i].delivery_status,
           validateStatus: deliveries[i].isValidate,
           verifCode: deliveries[i].verifCode,
           departure_journey: missions[j].departure_journey,
@@ -362,7 +359,6 @@ router.post("/loadMyDeliveries", async function (req, res, next) {
     }
   }
 
-  
   console.log("mydata", dbDeliveries);
 
   var result = false;
@@ -372,59 +368,48 @@ router.post("/loadMyDeliveries", async function (req, res, next) {
   res.json({ result, deliveries: dbDeliveries });
 });
 
-router.post('/changeStatusValidate',async function(req,res,next){
-
-
-
+router.post("/changeStatusValidate", async function (req, res, next) {
   var mission = await missionModel.findById(req.body.idMission);
 
-  
   if (mission.transport_capacity_rest == 0) {
     mission.newMissionStatus = false;
   }
 
   var delivery = await deliveryModel.findById(req.body.idDelivery);
 
-  
-
-  if(delivery.isValidate == "notYet"){
+  if (delivery.isValidate == "notYet") {
     mission.currentMissionStatus = true;
     delivery.isValidate = "accept";
-    if(mission.transport_capacity_rest >= req.body.weigth){
+    if (mission.transport_capacity_rest >= req.body.weigth) {
       mission.transport_capacity_rest -= parseInt(req.body.weigth);
-     
-          
-    }else{
-      
-      res.json({err:true});
+    } else {
+      res.json({ err: true });
       return;
-      
-    };
-
-  } else if (delivery.isValidate== "accept"){
+    }
+  } else if (delivery.isValidate == "accept") {
     mission.finishMissionStatus = true;
     delivery.delivery_status = "delivered";
   }
- 
-
-
 
   var missionSave = await mission.save();
 
-  console .log(missionSave);
+  console.log(missionSave);
   await delivery.save();
 
+  var deliveries = await missionModel
+    .findById(req.body.idMission)
+    .populate("delivery_id")
+    .exec();
 
-  var deliveries = await missionModel.findById(req.body.idMission).populate('delivery_id').exec();
- 
-
-  if (deliveries.delivery_id.filter(e=>e.delivery_status == "delivered").length == deliveries.delivery_id.filter(e=>e.isValidate == "accept").length){
+  if (
+    deliveries.delivery_id.filter((e) => e.delivery_status == "delivered")
+      .length ==
+    deliveries.delivery_id.filter((e) => e.isValidate == "accept").length
+  ) {
     mission.currentMissionStatus = false;
     mission.newMissionStatus = false;
     missionSave = await mission.save();
   }
-
- 
 
   res.json(missionSave ? true : false);
 });
@@ -438,69 +423,76 @@ router.post("/addMessageAccept", async function (req, res, next) {
     date: req.body.date,
   });
 
-
   let messageSave = await newMessage.save();
   console.log(messageSave);
-  res.json({result: true});
+  res.json({ result: true });
 });
 
-
-router.post("/changeStatusCancel", async function(req,res,next){
+router.post("/changeStatusCancel", async function (req, res, next) {
   var result = false;
   var delivery = await deliveryModel.findById(req.body.idDelivery);
-  
+
   delivery.isValidate = "cancel";
 
   var deliverySave = await delivery.save();
 
-  if(deliverySave.isValidate == "cancel"){
+  if (deliverySave.isValidate == "cancel") {
     var mission = await missionModel.findById(req.body.idMission);
 
     mission.transport_capacity_rest += parseInt(req.body.weigth);
     await mission.save();
   }
-  
 
-  if(deliverySave){
+  if (deliverySave) {
     result = true;
   }
 
-  res.json(result)
+  res.json(result);
 });
 
-
-
 router.post("/loadLastMessage", async function (req, res, next) {
-
   var userId = await userModel.findOne({ token: req.body.token });
 
   /* get distinct destinataires*/
-  var distinctDest = await messageModel.find({expeditor_id:userId._id}).distinct("recipient_id");
- 
-  var messages = new Array(distinctDest.length);
-  for(var i=0; i<distinctDest.length; i++){
-    var msgExp = await messageModel.find({$or:[
-      {$and:[{expeditor_id:userId._id},{recipient_id:distinctDest[i]}]},
-      {$and:[{expeditor_id:distinctDest[i]},{recipient_id:userId._id}]}
-    ]});
-    var destInfos = await userModel.find({_id:distinctDest[i]});
+  var distinctDest = await messageModel
+    .find({ expeditor_id: userId._id })
+    .distinct("recipient_id");
 
-      messages[i] = 
-        {id_dest: destInfos[0]._id,
-         firstName_dest:destInfos[0].firstName,
-         lastName_dest:destInfos[0].lastName,
-         msg: msgExp[msgExp.length-1].message.slice(0,40) + "...",
-         avatarUrl: destInfos[0].avatar,
-         timeStamp: "12:47 PM"
-        }
-      }
+  var messages = new Array(distinctDest.length);
+  for (var i = 0; i < distinctDest.length; i++) {
+    var msgExp = await messageModel.find({
+      $or: [
+        {
+          $and: [
+            { expeditor_id: userId._id },
+            { recipient_id: distinctDest[i] },
+          ],
+        },
+        {
+          $and: [
+            { expeditor_id: distinctDest[i] },
+            { recipient_id: userId._id },
+          ],
+        },
+      ],
+    });
+    var destInfos = await userModel.find({ _id: distinctDest[i] });
+
+    messages[i] = {
+      id_dest: destInfos[0]._id,
+      firstName_dest: destInfos[0].firstName,
+      lastName_dest: destInfos[0].lastName,
+      msg: msgExp[msgExp.length - 1].message.slice(0, 40) + "...",
+      avatarUrl: destInfos[0].avatar,
+      timeStamp: "12:47 PM",
+    };
+  }
   var result = false;
   if (messages) {
     result = true;
   }
-  res.json({result, messages});
+  res.json({ result, messages });
 });
-
 
 router.post("/loadMessages", async function (req, res, next) {
   var userId = await userModel.findOne({ token: req.body.token });
@@ -514,60 +506,66 @@ router.post("/loadMessages", async function (req, res, next) {
   if (messages) {
     result = true;
   }
-  res.json({result, messages});
+  res.json({ result, messages });
 });
 
-router.post('/changeStatusTransit',async function(req,res,next){
-
-  var result = false
+router.post("/changeStatusTransit", async function (req, res, next) {
+  var result = false;
   var delivery = await deliveryModel.findById(req.body.idDelivery);
   delivery.delivery_status = "inTransitDelivery";
   var deliverySave = delivery.save();
 
- 
-
-  if(deliverySave){
-    result=true;
+  if (deliverySave) {
+    result = true;
   }
 
-  res.json(result)
+  res.json(result);
 });
 
-
-
-router.post('/uploadPhoto', async function(req, res, next) {
-  var imagePath = './tmp/'+uniqid()+'.jpg';
+router.post("/uploadPhoto", async function (req, res, next) {
+  var imagePath = "./tmp/" + uniqid() + ".jpg";
   var copyPhoto = await req.files.photo.mv(imagePath);
- 
+
   var resultCloudinary = await cloudinary.uploader.upload(imagePath);
-  
 
   fs.unlinkSync(imagePath);
 
-  if(!copyPhoto) {
-    res.json({result: true, message: 'File uploaded!',resultCloudinary} );      
+  if (!copyPhoto) {
+    res.json({ result: true, message: "File uploaded!", resultCloudinary });
   } else {
-    res.json({result: false, message: resultCopy} );
+    res.json({ result: false, message: resultCopy });
   }
-})
-
+});
 
 router.post("/sendMessage", async function (req, res, next) {
   let newMessage = new messageModel({
     expeditor_id: req.body.expeditor,
     recipient_id: req.body.recipient,
-    message:req.body.message,
+    message: req.body.message,
     date: req.body.date,
   });
 
   let messageSave = await newMessage.save();
   console.log(messageSave);
-  var result="false";
-  if (messageSave){
-    result=true;
+  var result = "false";
+  if (messageSave) {
+    result = true;
   }
   //console.log(newMessage);
-  res.json({result,newMessage});
+  res.json({ result, newMessage });
+});
+
+router.delete("/deleteMyDelivery/:verifcode", async function (req, res, next) {
+  var returnDb = await deliveryModel.deleteOne({
+    verifCode: req.params.verifcode,
+  });
+
+  var result = false;
+  if (returnDb) {
+    result = true;
+  }
+
+  res.json({ result });
 });
 
 router.delete('/deleteMyDelivery/:verifcode', async function(req, res, next) {
