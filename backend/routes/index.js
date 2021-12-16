@@ -458,19 +458,23 @@ router.post("/loadLastMessage", async function (req, res, next) {
   var distinctDest1 = await messageModel
     .find({ recipient_id: userId._id })
     .distinct("expeditor_id");
-  distinctDest1 = distinctDest1.toString();
+  distinctDest1 = distinctDest1.toString().split(',');
+  
+ 
 
   var distinctDest2 = await messageModel
     .find({ expeditor_id: userId._id })
     .distinct("recipient_id")
-    distinctDest2 = distinctDest2.toString();
+    distinctDest2 = distinctDest2.toString().split(',');
 
     var distinctDest3 = [];
-    distinctDest3.push(distinctDest1,distinctDest2);
+
+    distinctDest3 = [...distinctDest1,...distinctDest2];
     
     var distinctDest3String2 = [... new Set(distinctDest3)];
     
     var distinctDest = new Array(distinctDest3String2.length);
+    console.log(distinctDest3String2)
     for(var i=0; i<distinctDest3String2.length; i++){
       distinctDest[i] = mongoose.Types.ObjectId(distinctDest3String2[i])
     }
@@ -495,6 +499,8 @@ router.post("/loadLastMessage", async function (req, res, next) {
       ],
     });
     var destInfos = await userModel.find({ _id: distinctDest[i] });
+
+    
     
     messages[i] = {
       id_msg: msgExp[msgExp.length-1]._id,
@@ -575,18 +581,6 @@ router.post("/sendMessage", async function (req, res, next) {
   res.json({ result, newMessage });
 });
 
-router.delete("/deleteMyDelivery/:verifcode", async function (req, res, next) {
-  var returnDb = await deliveryModel.deleteOne({
-    verifCode: req.params.verifcode,
-  });
-
-  var result = false;
-  if (returnDb) {
-    result = true;
-  }
-
-  res.json({ result });
-});
 
 router.delete('/deleteMyDelivery/:verifcode', async function(req, res, next) {
   var returnDb = await deliveryModel.deleteOne({ verifCode: req.params.verifcode});
