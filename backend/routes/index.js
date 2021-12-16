@@ -462,20 +462,6 @@ router.post("/loadLastMessage", async function (req, res, next) {
 
   var distinctDest2 = await messageModel
     .find({ expeditor_id: userId._id })
-<<<<<<< HEAD
-    .distinct("recipient_id");
-  distinctDest2 = distinctDest2.toString();
-
-  var distinctDest3 = [];
-  distinctDest3.push(distinctDest1, distinctDest2);
-
-  var distinctDest3String2 = [...new Set(distinctDest3)];
-
-  var distinctDest = new Array(distinctDest3String2.length);
-  for (var i = 0; i < distinctDest3String2.length; i++) {
-    distinctDest[i] = mongoose.Types.ObjectId(distinctDest3String2[i]);
-  }
-=======
     .distinct("recipient_id")
     distinctDest2 = distinctDest2.toString();
 
@@ -489,7 +475,6 @@ router.post("/loadLastMessage", async function (req, res, next) {
       distinctDest[i] = mongoose.Types.ObjectId(distinctDest3String2[i])
     }
 
->>>>>>> 080759990dea5d76886f89d3580bfdf0c40ed6ee
 
   var messages = new Array(distinctDest.length);
   for (var i = 0; i < distinctDest.length; i++) {
@@ -512,11 +497,7 @@ router.post("/loadLastMessage", async function (req, res, next) {
     var destInfos = await userModel.find({ _id: distinctDest[i] });
     
     messages[i] = {
-<<<<<<< HEAD
-      id_msg: msgExp[msgExp.length - 1]._id,
-=======
       id_msg: msgExp[msgExp.length-1]._id,
->>>>>>> 080759990dea5d76886f89d3580bfdf0c40ed6ee
       id_dest: destInfos[0]._id,
       firstName_dest: destInfos[0].firstName,
       lastName_dest: destInfos[0].lastName,
@@ -525,11 +506,7 @@ router.post("/loadLastMessage", async function (req, res, next) {
       timeStamp: msgExp[msgExp.length-1].date,
     };
   }
-<<<<<<< HEAD
-  console.log(messages);
-=======
   //console.log(messages);
->>>>>>> 080759990dea5d76886f89d3580bfdf0c40ed6ee
   var result = false;
   if (messages) {
     result = true;
