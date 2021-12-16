@@ -5,6 +5,7 @@ var uid2 = require("uid2");
 var uniqid = require("uniqid");
 var request = require("sync-request");
 var fs = require("fs");
+var mongoose = require("mongoose");
 
 var cloudinary = require("cloudinary").v2;
 
@@ -30,6 +31,7 @@ var userModel = require("../modules/users");
 var messageModel = require("../modules/messages");
 var missionModel = require("../modules/missions");
 var deliveryModel = require("../modules/deliveries");
+const { discriminator } = require("../modules/users");
 
 /* GET home page. */
 router.get("/", async function (req, res, next) {
@@ -452,11 +454,28 @@ router.post("/changeStatusCancel", async function (req, res, next) {
 
 router.post("/loadLastMessage", async function (req, res, next) {
   var userId = await userModel.findOne({ token: req.body.token });
-
+  
   /* get distinct destinataires*/
-  var distinctDest = await messageModel
+  var distinctDest1 = await messageModel
+    .find({ recipient_id: userId._id })
+    .distinct("expeditor_id");
+  distinctDest1 = distinctDest1.toString();
+
+  var distinctDest2 = await messageModel
     .find({ expeditor_id: userId._id })
-    .distinct("recipient_id");
+    .distinct("recipient_id")
+    distinctDest2 = distinctDest2.toString();
+
+    var distinctDest3 = [];
+    distinctDest3.push(distinctDest1,distinctDest2);
+    
+    var distinctDest3String2 = [... new Set(distinctDest3)];
+    
+    var distinctDest = new Array(distinctDest3String2.length);
+    for(var i=0; i<distinctDest3String2.length; i++){
+      distinctDest[i] = mongoose.Types.ObjectId(distinctDest3String2[i])
+    }
+
 
   var messages = new Array(distinctDest.length);
   for (var i = 0; i < distinctDest.length; i++) {
@@ -477,16 +496,18 @@ router.post("/loadLastMessage", async function (req, res, next) {
       ],
     });
     var destInfos = await userModel.find({ _id: distinctDest[i] });
-
+    
     messages[i] = {
+      id_msg: msgExp[msgExp.length-1]._id,
       id_dest: destInfos[0]._id,
       firstName_dest: destInfos[0].firstName,
       lastName_dest: destInfos[0].lastName,
-      msg: msgExp[msgExp.length - 1].message.slice(0, 40) + "...",
+      msg: msgExp[msgExp.length-1].message.slice(0, 40) + "...",
       avatarUrl: destInfos[0].avatar,
-      timeStamp: "12:47 PM",
+      timeStamp: msgExp[msgExp.length-1].date,
     };
   }
+  //console.log(messages);
   var result = false;
   if (messages) {
     result = true;
