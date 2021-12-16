@@ -306,9 +306,10 @@ router.post("/loadDeliveries", async function (req, res, next) {
     .exec();
 
   var deliveries = mission.delivery_id;
-
+  
   if (req.body.status == "newMission") {
     deliveries = deliveries.filter((e) => e.isValidate == "notYet");
+   
   } else if (req.body.status == "currentMission") {
     deliveries = deliveries.filter(
       (e) => e.isValidate == "accept" && e.delivery_status != "delivered"
@@ -317,8 +318,6 @@ router.post("/loadDeliveries", async function (req, res, next) {
     deliveries = deliveries.filter((e) => e.delivery_status == "delivered");
   }
 
-  console.log(mission.transport_capacity_rest);
-  console.log(mission.transport_capacity_total);
 
   var etatCapacity =
     100 -
@@ -333,7 +332,7 @@ router.post("/loadDeliveries", async function (req, res, next) {
     result = deliveries;
   }
 
-  res.json({ result, etatCapacity, cagnotte: totalCagnotte });
+  res.json({ result, etatCapacity, cagnotte: totalCagnotte});
 });
 
 router.post("/loadMyDeliveries", async function (req, res, next) {
