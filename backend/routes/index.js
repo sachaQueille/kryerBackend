@@ -190,6 +190,7 @@ router.post("/signUp", async function (req, res, next) {
       email: req.body.emailFromFront,
       password: hash,
       token: uid2(32),
+      avatar:"https://cdn.icon-icons.com/icons2/1879/PNG/512/iconfinder-3-avatar-2754579_120516.png"
     });
 
     saveUser = await newUser.save();
@@ -592,6 +593,19 @@ router.post("/sendMessage", async function (req, res, next) {
   }
   //console.log(newMessage);
   res.json({ result, newMessage });
+});
+
+router.delete("/deleteMyDelivery/:verifcode", async function (req, res, next) {
+  var returnDb = await deliveryModel.deleteOne({
+    verifCode: req.params.verifcode,
+  });
+ 
+  var result = false;
+  if (returnDb) {
+    result = true;
+  }
+ 
+  res.json({ result });
 });
 
 
