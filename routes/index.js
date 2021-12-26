@@ -35,11 +35,7 @@ const { discriminator } = require("../modules/users");
 
 /* GET home page. */
 router.get("/", async function (req, res, next) {
-  var user = await deliveryModel
-    .findById("61ade704aa1d49805ebbd627")
-    .populate("expeditor_id")
-    .exec();
-
+ 
   res.render("index", { title: "Express" });
 });
 
@@ -68,9 +64,10 @@ router.post("/saveMission", async function (req, res, next) {
   var user = await userModel.findById(req.body.idKryer);
   user.missions.push(missionSave._id);
 
-  await user.save();
+ var userSave =  await user.save();
 
-  res.json({ result: true });
+  
+  res.json({ result: userSvae ?  true : false });
 });
 
 router.post("/searchKryer", async function (req, res, next) {
@@ -88,7 +85,7 @@ router.post("/searchKryer", async function (req, res, next) {
 
   missionList = missionList.filter((e) => e.newMissionStatus == true);
 
-  missionList = missionList.filter((e) => e.newMissionStatus == true);
+
 
   // je recupere seulement les informations qui m'interessent pour les envoyer dans le front
   kryerList = [];
@@ -119,15 +116,15 @@ router.post("/searchKryer", async function (req, res, next) {
   res.json(result);
 });
 
-router.get("/getMission", async function (req, res, next) {
-  var missions = await missionModel.find();
+// router.get("/getMission", async function (req, res, next) {
+//   var missions = await missionModel.find();
 
-  var result = false;
-  if (missions) {
-    result = true;
-  }
-  res.json({ result, missions });
-});
+//   var result = false;
+//   if (missions) {
+//     result = true;
+//   }
+//   res.json({ result, missions });
+// });
 
 router.post("/signIn", async function (req, res, next) {
   var result = false;
@@ -213,11 +210,11 @@ router.get("/getUser", async function (req, res, next) {
   res.json({ user });
 });
 
-router.get("/getUserById", async function (req, res, next) {
-  var user = await userModel.findById(req.query.id);
+// router.get("/getUserById", async function (req, res, next) {
+//   var user = await userModel.findById(req.query.id);
 
-  res.json({ user });
-});
+//   res.json({ user });
+// });
 
 // route pour save le colis dans bdd
 router.post("/saveDelivery", async function (req, res, next) {
@@ -320,8 +317,7 @@ router.post("/loadDeliveries", async function (req, res, next) {
     deliveries = deliveries.filter((e) => e.delivery_status == "delivered");
   }
 
-  console.log(mission.transport_capacity_rest);
-  console.log(mission.transport_capacity_total);
+  
 
   var etatCapacity =
     100 -
@@ -396,7 +392,7 @@ router.post("/changeStatusValidate", async function (req, res, next) {
 
   var missionSave = await mission.save();
 
-  console.log(missionSave);
+  
   await delivery.save();
 
   var deliveries = await missionModel
@@ -417,19 +413,6 @@ router.post("/changeStatusValidate", async function (req, res, next) {
   res.json(missionSave ? true : false);
 });
 
-router.post("/addMessageAccept", async function (req, res, next) {
-  let newMessage = new messageModel({
-    expeditor_id: req.body.expeditor,
-    recipient_id: req.body.recipient,
-    message:
-      "Bonjour, je viens d'accepter votre demande, nous pouvons échanger ici pour les détails",
-    date: req.body.date,
-  });
-
-  let messageSave = await newMessage.save();
-  console.log(messageSave);
-  res.json({ result: true });
-});
 
 router.post("/changeStatusCancel", async function (req, res, next) {
   var result = false;
@@ -453,8 +436,36 @@ router.post("/changeStatusCancel", async function (req, res, next) {
   res.json(result);
 });
 
+router.post("/changeStatusTransit", async function (req, res, next) {
+  var result = false;
+  var delivery = await deliveryModel.findById(req.body.idDelivery);
+  delivery.delivery_status = "inTransitDelivery";
+  var deliverySave = delivery.save();
+
+  if (deliverySave) {
+    result = true;
+  }
+
+  res.json(result);
+});
+router.post("/addMessageAccept", async function (req, res, next) {
+  let newMessage = new messageModel({
+    expeditor_id: req.body.expeditor,
+    recipient_id: req.body.recipient,
+    message:
+      "Bonjour, je viens d'accepter votre demande, nous pouvons échanger ici pour les détails",
+    date: req.body.date,
+  });
+
+  let messageSave = await newMessage.save();
+  console.log(messageSave);
+  res.json({ result: true });
+});
+
 router.post("/loadLastMessage", async function (req, res, next) {
   var userId = await userModel.findOne({ token: req.body.token });
+
+  console.log(userId);
 
   /* get distinct destinataires*/
   var distinctDest1 = await messageModel
@@ -476,15 +487,26 @@ router.post("/loadLastMessage", async function (req, res, next) {
     var distinctDest3String2 = [... new Set(distinctDest3)];
     
     var distinctDest = new Array(distinctDest3String2.length);
-    console.log(distinctDest3String2)
+    
+    distinctDest = distinctDest.filter(e=> e != '');
+
     for(var i=0; i<distinctDest3String2.length; i++){
-      distinctDest[i] = mongoose.Types.ObjectId(distinctDest3String2[i])
+  
+        distinctDest[i] = mongoose.Types.ObjectId(distinctDest3String2[i])
+      
+      
     }
+
+    console.log(distinctDest)
+    console.log(distinctDest3String2)
+
+    
 
 
   var messages = new Array(distinctDest.length);
   for (var i = 0; i < distinctDest.length; i++) {
-    var msgExp = await messageModel.find({
+   
+       var msgExp = await messageModel.find({
       $or: [
         {
           $and: [
@@ -500,6 +522,8 @@ router.post("/loadLastMessage", async function (req, res, next) {
         },
       ],
     });
+    
+   
     var destInfos = await userModel.find({ _id: distinctDest[i] });
 
     
@@ -549,34 +573,6 @@ router.post("/loadMessages", async function (req, res, next) {
   res.json({ result, messages });
 });
 
-router.post("/changeStatusTransit", async function (req, res, next) {
-  var result = false;
-  var delivery = await deliveryModel.findById(req.body.idDelivery);
-  delivery.delivery_status = "inTransitDelivery";
-  var deliverySave = delivery.save();
-
-  if (deliverySave) {
-    result = true;
-  }
-
-  res.json(result);
-});
-
-router.post("/uploadPhoto", async function (req, res, next) {
-  var imagePath = "./tmp/" + uniqid() + ".jpg";
-  var copyPhoto = await req.files.photo.mv(imagePath);
-
-  var resultCloudinary = await cloudinary.uploader.upload(imagePath);
-
-  fs.unlinkSync(imagePath);
-
-  if (!copyPhoto) {
-    res.json({ result: true, message: "File uploaded!", resultCloudinary });
-  } else {
-    res.json({ result: false, message: resultCopy });
-  }
-});
-
 router.post("/sendMessage", async function (req, res, next) {
   let newMessage = new messageModel({
     expeditor_id: req.body.expeditor,
@@ -594,6 +590,23 @@ router.post("/sendMessage", async function (req, res, next) {
   //console.log(newMessage);
   res.json({ result, newMessage });
 });
+
+
+router.post("/uploadPhoto", async function (req, res, next) {
+  var imagePath = "./tmp/" + uniqid() + ".jpg";
+  var copyPhoto = await req.files.photo.mv(imagePath);
+
+  var resultCloudinary = await cloudinary.uploader.upload(imagePath);
+
+  fs.unlinkSync(imagePath);
+
+  if (!copyPhoto) {
+    res.json({ result: true, message: "File uploaded!", resultCloudinary });
+  } else {
+    res.json({ result: false });
+  }
+});
+
 
 router.delete("/deleteMyDelivery/:verifcode", async function (req, res, next) {
   var returnDb = await deliveryModel.deleteOne({
