@@ -274,9 +274,9 @@ router.post("/searchKryer", async function (req, res, next) {
 router.post("/loadMissions", async function (req, res, next) {
   var result = false;
 
-
+ // recupere les missions du user
   var kryer = await userModel.find({token:req.body.token})
-  // recupere les missions du user
+ 
   kryer = await userModel.findById(kryer[0]._id).populate("missions").exec();
 
   var missions = kryer.missions;
