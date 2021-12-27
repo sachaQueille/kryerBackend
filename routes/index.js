@@ -143,7 +143,7 @@ router.post("/saveMission", async function (req, res, next) {
     place_delivery: req.body.deliveryPlace,
     date_receipt: req.body.recuperationDate,
     place_receipt: req.body.recuperationPlace,
-    pricePerKg: req.body.pricePerKg,
+    pricePerKg: req.body.pricePerKg ? req.body.pricePerKg : 0,
     departure_journey: req.body.departure,
     arrival_journey: req.body.arrival,
     transport_capacity_total: req.body.weight,
@@ -218,13 +218,26 @@ router.post("/saveDelivery", async function (req, res, next) {
 
 
 router.post("/searchKryer", async function (req, res, next) {
+
   var missionList = await missionModel.find({
     departure_journey: req.body.departure,
     arrival_journey: req.body.arrival,
   });
 
-  //filtre la date
-  missionList = missionList.filter(e => e.date_journey >= req.body.date);
+
+
+ //filtre la date
+function formatDateToCompare(date){
+
+  date = date.split('/');
+  date = date[2]+'-'+date[1]+'-'+date[0];
+  date = Date.parse(date)
+  return date
+}
+
+ 
+  missionList = missionList.filter(e => formatDateToCompare(e.date_journey) >= formatDateToCompare(req.body.date));
+ 
 
   //filtre sur le poid du colis
   missionList = missionList.filter(
