@@ -143,7 +143,7 @@ router.post("/saveMission", async function (req, res, next) {
     place_delivery: req.body.deliveryPlace,
     date_receipt: req.body.recuperationDate,
     place_receipt: req.body.recuperationPlace,
-    pricePerKg: req.body.pricePerKg ? req.body.pricePerKg : 0,
+    pricePerKg: req.body.pricePerKg ,
     departure_journey: req.body.departure,
     arrival_journey: req.body.arrival,
     transport_capacity_total: req.body.weight,
@@ -195,7 +195,7 @@ router.post("/saveDelivery", async function (req, res, next) {
       avatar: req.body.avatarExp,
     },
     delivery_status: "supportedDelivery",
-    price: req.body.price,
+    price: (req.body.price != "null" ) ? req.body.price : 0,
     isValidate: "notYet",
     verifCode: uniqid(),
   });
@@ -352,7 +352,7 @@ router.post("/loadDeliveries", async function (req, res, next) {
 
 router.post("/loadMyDeliveries", async function (req, res, next) {
   var deliveries = await deliveryModel.find({ expeditor_id: req.body.userId });
-  console.log(deliveries);
+ 
   var dbDeliveries = [];
   for (var i = 0; i < deliveries.length; i++) {
     var missions = await missionModel.find({ delivery_id: deliveries[i]._id });
@@ -450,12 +450,15 @@ router.post("/changeStatusCancel", async function (req, res, next) {
 
   var deliverySave = await delivery.save();
 
-  // lorsque le status du colis est cancel , je rajoute le poid du colis a la capacite de trnsp de la mission
-  if (deliverySave.isValidate == "cancel") {
+  // si la demande est accepté , je rajoute le poid du colis a la capacite de trnsp de la mission
+  if (delivery.isValidate == "accept") {
     var mission = await missionModel.findById(req.body.idMission);
 
-    mission.transport_capacity_rest += parseInt(req.body.weigth);
-    await mission.save();
+    if(req.body.weight){
+      mission.transport_capacity_rest += parseInt(req.body.weigth);
+      await mission.save();
+    }
+   
   }
 
   if (deliverySave) {
@@ -494,7 +497,7 @@ router.post("/addMessageAccept", async function (req, res, next) {
   });
 
   let messageSave = await newMessage.save();
-  console.log(messageSave);
+ 
   res.json({ result: true });
 });
 
