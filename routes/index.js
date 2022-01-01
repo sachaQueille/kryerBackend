@@ -74,6 +74,16 @@ router.post("/signUp", async function (req, res, next) {
     if (saveUser) {
       result = true;
       token = saveUser.token;
+      saveUser = {
+        _id:saveUser._id,
+        firstName: saveUser.firstName,
+        lastName: saveUser.lastName,
+        token:saveUser.token,
+        avatar:saveUser.avatar,
+        email: saveUser.email,
+        phone: saveUser.phone
+
+      }
     }
   }
 
@@ -108,6 +118,18 @@ router.post("/signIn", async function (req, res, next) {
       error.push("email incorrect");
     }
   }
+
+  user = {
+    _id:user._id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    token: user.token,
+    avatar: user.avatar,
+    email: user.email,
+    phone: user.phone
+
+  }
+
   res.json({ result, user, error, token });
 });
 
@@ -117,7 +139,18 @@ router.get("/getUser", async function (req, res, next) {
   var user = await userModel.find({ token: req.query.token });
 
 
-  res.json({ user });
+  user = {
+    _id:user[0]._id,
+    firstName: user[0].firstName,
+    lastName: user[0].lastName,
+    token: user[0].token,
+    avatar: user[0].avatar,
+    email: user[0].email,
+    phone: user[0].phone
+
+  }
+  console.log(user)
+  res.json(user );
 });
 
 
@@ -138,6 +171,12 @@ router.post("/updateInfos", async function (req, res, next) {
 
 
 router.post("/saveMission", async function (req, res, next) {
+
+  var user = await userModel.find({token:req.body.tokenKryer});
+  
+  user = await userModel.findById(user[0]._id).populate('missions').exec();
+  
+
   let newMission = new missionModel({
     date_delivery: req.body.deliveryDate,
     place_delivery: req.body.deliveryPlace,
@@ -159,7 +198,7 @@ router.post("/saveMission", async function (req, res, next) {
 
   var missionSave = await newMission.save();
 
-  var user = await userModel.findById(req.body.idKryer);
+  
   user.missions.push(missionSave._id);
 
  var userSave =  await user.save();
@@ -174,8 +213,10 @@ router.post("/saveMission", async function (req, res, next) {
 router.post("/saveDelivery", async function (req, res, next) {
   var result = false;
 
+  var user = await userModel.find({token:req.body.expeditorToken});
+
   var newDelivery = new deliveryModel({
-    expeditor_id: req.body.expeditorId,
+    expeditor_id: user[0]._id,
     url_image: req.body.urlDelivery,
     weigth: req.body.weight,
     measures: {
@@ -351,7 +392,9 @@ router.post("/loadDeliveries", async function (req, res, next) {
 
 
 router.post("/loadMyDeliveries", async function (req, res, next) {
-  var deliveries = await deliveryModel.find({ expeditor_id: req.body.userId });
+
+  var user = await userModel.find({token:req.body.token});
+  var deliveries = await deliveryModel.find({ expeditor_id: user[0]._id});
  
   var dbDeliveries = [];
   for (var i = 0; i < deliveries.length; i++) {
@@ -488,8 +531,10 @@ router.post("/changeStatusTransit", async function (req, res, next) {
 
 router.post("/addMessageAccept", async function (req, res, next) {
 
+  var user = await userModel.find({token:req.body.expeditorToken});
+
   let newMessage = new messageModel({
-    expeditor_id: req.body.expeditor,
+    expeditor_id: user[0]._id,
     recipient_id: req.body.recipient,
     message:
       "Bonjour, je viens d'accepter votre demande, nous pouvons échanger ici pour les détails",
